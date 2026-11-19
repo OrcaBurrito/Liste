@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0b6bcb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Geräte STK">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAPYklEQVR4Xu2df5BcVZXH77n3vdc/prtnJjOTIWDIj5nEwIbNDyxSJkJidAXUQLHWkiJuFaW4iytKpXYNWmUpaiH4gyCoWMWqJchKFFmg1s1urUTYnQ0GV5KQsPxKmCQkJjOZCZme/t397g/rvpdMxskM/V73C6/pOZ+a/JHJzOvM6+987znnnnsetNzyB4Igk0HxtiBTgeJAUByIf9A5EHQOxD/oHAg6B+IfdA4EnQPxDzoHgs6B+AedA0HnQPyDzoGgcyD+QedA0DkQ/6BzIOgciH/QORB0DsQ/6BwIOgfiH3QOBJ0D8Q86B4LOgfgHnQNB50D8g86BoHMg/kHnQNA5EP+gcyDoHIh/0DkQdA7EP4b/b3nHwygAIUT/8YpSRCqllNevbw6mlzgYBSFVpigIl/7ePwZRi1oGFXIaCWQaiYNRyBR4PMLWLkqtXphkzPGPaijHYvYcKTz9auZExk7EGSHaSKYD00UclJJMnq9b2n7nX89efEGshrf2aLqy+TeD39s2GDEppdNCHzAdJhhrz8jzz3yg+/4Nc93fe+H+7nsxAMdegOiLEEJ++uzw3z90MBqh08E8mt85GIVsgX9kadv9G+YKHWkoRsHwtKT8GVIRLtQnVnUNjNpfeuxIKmE0ffzR/HUOIVUswu65fo7zVmtl1LCmEEIoEJOBkGTTlbMumRMvlIWb9DQxTS4ORqFQFit7EwtmRqU6tTTUDABRSpkMrlvWzm1Jm/zmNbs49NvJ1eqFKQAig8hC9QUJWfPuVsJoIBdsZJpd/A61riSTA0FfsGGZFuJAagPFgUwJigNBcSD+QedA0DkQ/6BzIOgciH/QORB0DsQ/6BwIOgfiH3QOBJ0D8Q86B4LOgfgHnQNB50D8g86BoHMg/kHnQNA5EP+gcyDoHIh/0DkQdA7EP40ygqGGOV1eMCgYDII9DqnHdQAxmL5yEMdvJ9I488fCF0ftc7q8wICM2vmyzwlg1ahwxUftkQr1NP7FLw0zfyxkcdQ2p8s7lEK5LNZe3KqPUwdhIO5MjgUzo1/dMMcyINj5Po02fyzMsU+Ukmxe1DOnq1lpkPljoYmjrjld3gE9+IvSgMMOPVXsXIQbDTZ/LJxlJag5XWHhBqTn7tUbZP5YOHWOoOZ0NSsNMn8sBHEEO6erWWmE+WMhiCPwOV3NSujzx0IQh0sQeWXzE+78sdDEgTQ+KA5kSlAcCIoD8Q86B4LOgfgHnQNB50D8g86BoHMg/kHnQNA5EP+E0+zj8cGMTYAa14IMvh6CfRovT7A8R4QmDqNJt2UVUc6DzRUFAN2deKZhTH9ePyRu7J88EeKNCkEcumObwguH887G/TlstnubkUpJIg1wHnV9+scaKecogCKKAk2Zcf2E2tP/xJVwjtRMeQccKRF9o4SkwGSwre4eCEEcUqlohG57JfNmjre3GFK943s7XEtgQClhObu488T+HUMv/2Ho1XQl3585xoAqogxgva0XzIgkV3b/xWVdi5Z39hqgn3wulHDanyeTiPYe8q+7TgKDUBaXEMShFLEMeiJj3/mfxzb/zYUVoUxtwR6U3JAIJRlQQuCV9OGH9z/15KFnD2QHKoIblDKgFjPdqEER8kbuuFRqy+tPRw1rSUfP+vlrNvSs7Yq1EUKkklRf5AwVriwDntg9sv21bCLKzkmzezVCO5oAQIpl+aMb531iVZf7/PBzJw9n+a92J/ygyKkHkQLo9aI/c+zuvY/+6kDfm+VM0oxFmKWXEm0nOsQYu7C7hgIBQWSRlwu8PC8566Z3X3Xr4uuSZpxL6fqHe7SJUdj1Rv7qe1/LlIQR9Okpj4QpDilJ2ZZfu/Zdm66cZRmBvntvIz/b/9Sm3//zcCndbiUMyoQTj1Z9faqDVVoSlUwlv2RGzwOX/+OKmYvGf9evnj/5uUcOnSzwqMXCeoBtaOJwjyMTRXJFfsnslnVL2tcuShl6FQ5SJQBEcDV/ZmROR0Qp5xXrw71Iumg/f7BsmeLxEz///ktPJM14lJm2FH6vDQQMyjKVgsXoHcv/4RLz/YTyF47kn9g10rc/azGwzDAfbRymOFwYhXxZCFsSFny51mDAM5Wv3jD39nUXcKHqP4kkpGIUtr2c+6vv7Iou3aJS/UmWVKfWkBphQLkUeVFQg6vs/msIKRMKyShzVqUarxkIIQSkExBSxS1KI8w5XxjwzTAYjFaMYNcspVRrzIgu3dJ63kFRTkki6vxfCycabTWTZP6z3IyIg9cSMyt821DwhC8OJ1bX2WDwP9zpKwd6bQnAHhn8qUr1n1JGECiihFKknIDz/5fku8XgZcTMExW8lfoi5Jd/Z6GzVsq29D993/8/nmRJ7Rn1AeOLYm64JQ1j/q8heYSICAmnunEGFIdXpFKUwMHs4MYdP0xZLeM3TWoDCEii3Drp6SsoIg3CymbPkwQ4OYfZvSdQHF5RRAHA5r2PDhdHo8yoXxxCSYuarVbLyXLWoKcP7YMkPEpTh1jXHsJj+q/hgeLwhHTKoPtG/7il/5n2SKKGrHUCBmXpcva2Jev71n33w7MvGyqmhTpVBCOglDTZ+b8jRoEondyHBYrDE268/C/7t7m/5Z6+Z2oMyt4sZa+bd/nGxR+bk+j+tyvv+PEV/xQzIlLrw0nZhAUtR2nb6+FGHiiO6uhtM8qyduGxg31JMyZkXVZPgRZ4eW6y+4HLN1KAirAJIcs6ekvCHlfk1zV0NnM3LiuNjmsbu9/s788ORJhVd7ShuBQ/ueLzXdE2W3KLmcPF9Me2fa0sKlTv3zrotMWkycPEzBDJAi//eASdozpunWTH8ZdswetsQDGpcaI4+vVLb1w96y+5FE6rB7l5+71HcsMJIybVmCcprQkzR1sGiDQD3VHwAYqjOq4gnh/exyidqqDmdH1VuZkmZUOl9I0Lr9y0ZD2XwmkBYXfv+eUTh7Z3RJNcTaiaAFBOEwM6g66zBFsrKI7qAAEuxclyloHe7zgbCtQWPM9L4yoWE2FAs3Zxcfvce1fe4nR4aRfpG9j7lZ0PdURTfPJNO9B10vBKYSiOKrjljRwv9WeORahxtnMwYDm78K6WzhVdi9KV3KS5jO7hcJLhB1ff1ma1cClMyt7IHf/bZ+6y6FTNCkopgPhx0KWOuneTawLF4QndfTPZfj/VflBot5K//OCX/+Pqu5Z19KbLk+iDUXqynP3OipuXdy6wJadAhZKf6ts8WByJMuut9pVCLZKiOLwiz1r4gehEdF7yvP/68LcWt8+LMevBNV/ojLbm7T9bX0xqDJdGb1z4oZsv+iiXAggwoLfvfGjb0V0zIomzQo0GAsXhCSBggjEh4AAAW4nuWHtP6nwuBZfiorYLt151Z6vVUhQVp69YhxqjlbwONd57i9M4qEsm/374uW/v+UVntLV6pTXUjVkURxX09piSSSu2oPWCsrDHp7L680bsvwf23PD0NwyqHwpiS7G0o2frVXdGmVmR3ARmS54wYw+v+aIONZQwnFDj09vvjbFItRwEAKTKz1JY52hknI5fmBFJiTN1iFNwJWbG2rYefm7jjvsp6HZzW/KlHT0/WHlrnpcUUVm7+L2Vn13S0eOGGoSQT/VtHiqmq4QaY/B4iHcGnaM6bobyvvMWS93pMzFx4FLMiKTue/HxjTt+6ByxAFvy9T1rHlx923B+6DMXX3NDz/vHQo3PP/fAb4/ubvcUakglLJGdDSDCylYaohOswXGXkhUzF8WYNenGilCiOz7jvr2Pnh/vuG3JeltyoeTHez/QZiXe232xU9VQJjW29D9zz4uPdUVbp6hqjAcI5aTSqopdhNkh1cDQOTygtzyUurh97tKO3gIvT1oJ5ZJ3xjtu3/nQw/ufMqlB9IlZ+ZELV8yIJKXSynglffjW332/zUp4aohUQKgt0guIndDHXLDO0cg4jTnGht61RVGadHvFPb8UMyI39W1+eP9TzDnaKpR0j7EUePmm/7k7axdN6rFLSNfW5fASQkKrgOmTzI38ljQOeleFqPXz18xPzipxe9Kjrc5eCSTN2E19d/cN7DUoc2sYBmVf+L8f7Rh6uc1KiIkbKJOhgBhlmV4gM3OJUQ6xDobi8IROaKXsjLbefNG6zBQ1cqfZXZ+OjBvRjz9z184T+yLUZEC/tecXP351q1PV4J5ezHm8lDi2Ktwih5a1t/8uQiilUslPX/TRR/p/uy99NGFGz85s3SPRFjVOlrPX/ubLn1x49Usjhx4/tL0zmhq3Hf+WKAZmTgwtFyMLwSiFaBu4rPjAXUpSVstPrthkMjp27vlshJJxw8rbpTt2/3zr4d93RVs9BaG6P5ASVpKFbvvAOqA8rCRlDFxWfED1uUV5aeeCb156S07knbRl8v1SqXSvRlesNWXFJzWYSVC6NYBIy953PeEtOpUNKUmZXuII8DAd6N5wtSzyQTKwSvfw6UtPrg/ltAN6VgbVKatR4f3XqMw8wkqhBxzTZVkJdqyW3m8jRfvANfyPa3U2AaLeN1KvJmVCGN+3nh9/DzFz9V4wIJo8IA18/pg7p2vPkTwhZXHgWpLrNub/mhglwqNOy5ZPk3I2XcHM6zhj3/UyMw8aRhnNn60EP3/s1JyuET3Hy8zywctkfpbZ8yRNHVLSJMLSN7X6MTVwIgylVUWUGFpuH1hH7BYws+GeYppAkwek4+ePUSDc09SdKalwZVByZk6XoGDmVX5W5cW/s/ddrwrdYBSJUXTEAdoV9IejA/3h/tWJYYHr02y0IkcW2C990n7tBn14SSeu9R6XCpbwh7e8DdQ/f+yt5nTpQZKgeAyMAm17nc3cRZNHiJkDyp2BI2dOnej+DD0/MKIqKZnuFUPLVPZC/QVaFgGPNAqE6SKOQOaPvdWcLn1inhIR1bshkQyND9LEMS2R+HHHLXRtXeXPU7xFZmfrvVY7ob+SlR1tNah/Twtx1D1/TL1wpOBpTpe7oEhGpKkr6UQR6u6pauvR/ec6QeR6WXE/H2r/cFWmizhcap8/JhRhkIzqtlAPc4LU6ZmRxAk8x94FN5dpdE2M0eSp7ARqnj/mnlv0PClWW8aZ4tiZ9Dac4yc1M73EUfP8Ma+bI81Fg4ZCSCOA4kCmBMWBoDgQ/6BzIOgciH/QORB0DsQ/6BwIOgfiH3QOBJ0D8Q86B4LOgfgHnQNB50D8g86BoHMg/kHnQNA5EP+gcyDoHIh/0DkQdA7EP+gcCDoH4h90DgSdA/EPOgeCzoH4B50DQedA/IPOgaBzIP5B50DQORD/oHMgU/InzlDC+1ubiBUAAAAASUVORK5CYII=">
+<title>Geräte STK/MTK</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1c2430;--mut:#667085;--bd:#e2e6ec;--pri:#0b6bcb;--prit:#fff;--red:#b42318;--redbg:#fef3f2;--amb:#93570a;--ambbg:#fffaeb;--grn:#067647;--grnbg:#ecfdf3;--gry:#475467;--grybg:#f2f4f7}
+@media(prefers-color-scheme:dark){:root{--bg:#12161c;--card:#1b222b;--tx:#e8ecf2;--mut:#9aa6b6;--bd:#2c3644;--pri:#5aa2f0;--prit:#0d1117;--red:#ff8b82;--redbg:#3a1a18;--amb:#f5b95c;--ambbg:#352612;--grn:#5fd197;--grnbg:#12301f;--gry:#b7c0cc;--grybg:#252d38}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:760px;margin:0 auto;padding:14px 12px 96px}
+h1{font-size:20px;margin:0}h2{font-size:18px;margin:0 0 4px}h3{font-size:15px;margin:18px 0 8px}
+.mut{color:var(--mut)}.small{font-size:13px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
+.card.click{cursor:pointer}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sp{justify-content:space-between}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.tile{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px;text-align:center}
+.tile b{display:block;font-size:24px;line-height:1.1}
+.tile.ueber b{color:var(--red)}.tile.bald b{color:var(--amb)}.tile.offen b{color:var(--gry)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.pill.ueber{background:var(--redbg);color:var(--red)}
+.pill.bald{background:var(--ambbg);color:var(--amb)}
+.pill.ok{background:var(--grnbg);color:var(--grn)}
+.pill.offen,.pill.na,.pill.inaktiv{background:var(--grybg);color:var(--gry)}
+.bar{border-left:4px solid var(--bd)}
+.bar.ueber{border-left-color:var(--red)}.bar.bald{border-left-color:var(--amb)}.bar.ok{border-left-color:var(--grn)}.bar.offen,.bar.inaktiv{border-left-color:var(--gry)}
+button,.btn{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:9px 13px;cursor:pointer;min-height:40px}
+button.pri{background:var(--pri);color:var(--prit);border-color:var(--pri);font-weight:600}
+button.dng{color:var(--red);border-color:var(--red)}
+button.sm{padding:5px 10px;min-height:32px;font-size:13.5px}
+button:disabled{opacity:.5}
+input,select,textarea{font:inherit;font-size:16px;width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);min-height:42px}
+input[type=checkbox],input[type=radio]{width:auto;min-height:0;margin-right:6px}
+textarea{min-height:90px;resize:vertical}
+label{display:block;font-size:13px;color:var(--mut);margin:11px 0 4px}
+label.chk{display:flex;align-items:center;color:var(--tx);font-size:15px;margin:12px 0 4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:flex;gap:16px}.seg label{display:flex;align-items:center;color:var(--tx);font-size:15px;margin:2px 0}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin:8px 0}
+.chip{white-space:nowrap;padding:6px 12px;min-height:34px;border-radius:99px;font-size:13.5px}
+.chip.on{background:var(--pri);color:var(--prit);border-color:var(--pri)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+nav .in{display:flex;width:100%;max-width:760px}
+nav button{flex:1;border:0;border-radius:0;background:transparent;padding:12px 4px;font-size:13.5px;color:var(--mut);min-height:48px}
+nav button.on{color:var(--pri);font-weight:700;box-shadow:inset 0 3px 0 var(--pri)}
+.banner{border-radius:10px;padding:9px 12px;margin-bottom:10px;font-size:14px}
+.banner.warn{background:var(--ambbg);color:var(--amb)}
+.banner.err{background:var(--redbg);color:var(--red)}
+.banner.ok{background:var(--grnbg);color:var(--grn)}
+#modal{display:none}#modal.on{display:block}
+#modal .back{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20}
+#modal .sheet{position:fixed;z-index:21;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;background:var(--card);border-radius:18px 18px 0 0;padding:16px 14px 28px;max-width:760px;margin:0 auto;border:1px solid var(--bd)}
+dl{display:grid;grid-template-columns:130px 1fr;gap:5px 10px;margin:8px 0}dt{color:var(--mut)}dd{margin:0;word-break:break-word}
+.hist{border-top:1px solid var(--bd);padding:8px 0}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:#222;color:#fff;padding:9px 16px;border-radius:99px;font-size:14px;z-index:40;display:none;max-width:90vw}
+.empty{text-align:center;padding:28px 10px;color:var(--mut)}
+.err{color:var(--red);font-size:14px;margin-top:10px}
+pre{white-space:pre-wrap;font-size:12.5px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px;max-height:160px;overflow:auto}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal"></div>
+<div id="toast" role="status"></div>
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var pad=function(n){return String(n).padStart(2,'0')};
+var uid=function(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)};
+var clean=function(o){return JSON.parse(JSON.stringify(o))};
+
+/* ---------- Datum ---------- */
+function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function todayStr(){return ymd(new Date())}
+function parseD(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?new Date(+m[1],+m[2]-1,+m[3]):null}
+function fmt(s){var d=parseD(s);return d?pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear():'–'}
+function addMonths(s,n){var d=parseD(s);n=Number(n);if(!d||!n)return '';var day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+n);var last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();d.setDate(Math.min(day,last));return ymd(d)}
+function addDays(s,n){var d=parseD(s);d.setDate(d.getDate()+n);return ymd(d)}
+function daysUntil(s){var d=parseD(s);if(!d)return null;return Math.round((d-parseD(todayStr()))/86400000)}
+function iso(y,m,d){var dt=new Date(y,m-1,d);if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return null;return y+'-'+pad(m)+'-'+pad(d)}
+/* '' = leer, null = ungültig */
+function parseDateAny(s){
+  s=(s||'').trim();if(!s)return '';var m;
+  if((m=/^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s)))return iso(+m[1],+m[2],+m[3]);
+  if((m=/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(s)))return iso(+m[3],+m[2],+m[1]);
+  if((m=/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/.exec(s)))return iso(2000+ +m[3],+m[2],+m[1]);
+  if((m=/^(\d{1,2})[./](\d{4})$/.exec(s))){var mo=+m[1],y=+m[2];if(mo<1||mo>12)return null;return iso(y,mo,new Date(y,mo,0).getDate())}
+  return null;
+}
+
+/* ---------- Zustand ---------- */
+var S={devices:[],inspections:[],settings:{warnDays:60},tab:'faellig',filter:'alle',q:'',ort:'',loaded:{d:false,i:false},slow:false,store:'none',modal:null,importText:'',importPrev:null,lastPruefer:''};
+var IDBH=null,DL=true,mem={devices:Object.create(null),inspections:Object.create(null),settings:Object.create(null)};
+try{S.lastPruefer=localStorage.getItem('gv_pruefer')||''}catch(e){}
+var ready=function(){return S.loaded.d&&S.loaded.i};
+
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function syncMem(){S.devices=Object.keys(mem.devices).map(function(k){return Object.assign({id:k},mem.devices[k])});S.inspections=Object.keys(mem.inspections).map(function(k){return Object.assign({id:k},mem.inspections[k])});if(mem.settings.main)S.settings=Object.assign({warnDays:60},mem.settings.main)}
+async function saveDoc(col,id,data,quiet){
+  data=clean(data);
+  if(IDBH)await idbReq(col,'readwrite',function(s){return s.put(Object.assign({},data,{id:id}))});
+  mem[col][id]=data;syncMem();
+  if(!quiet){render();renderModalIfDetail()}
+}
+async function delDoc(col,id){
+  if(IDBH)await idbReq(col,'readwrite',function(s){return s.delete(id)});
+  delete mem[col][id];syncMem();render();renderModalIfDetail();
+}
+
+/* ---------- Prüflogik ---------- */
+var RANK={ueber:4,offen:3,bald:2,ok:1,na:0};
+function chk(dv,art){
+  if(art==='mtk'&&!dv.mtkPflicht)return {s:'na',next:''};
+  var next=dv[art+'Next'];if(!next)return {s:'offen',next:''};
+  var d=daysUntil(next);
+  if(d<0)return {s:'ueber',d:d,next:next};
+  if(d<=S.settings.warnDays)return {s:'bald',d:d,next:next};
+  return {s:'ok',d:d,next:next};
+}
+function devStatus(dv){
+  if(dv.status!=='aktiv')return 'inaktiv';
+  var a=chk(dv,'stk').s,b=chk(dv,'mtk').s;return RANK[a]>=RANK[b]?a:b;
+}
+function plural(n){return n===1?'Tag':'Tage'}
+function chkLabel(c){
+  if(c.s==='ueber')return 'überfällig seit '+fmt(c.next)+' ('+(-c.d)+' '+plural(-c.d)+')';
+  if(c.s==='bald')return c.d===0?'heute fällig':'fällig '+fmt(c.next)+' (in '+c.d+' '+plural(c.d)+')';
+  if(c.s==='offen')return 'Stand nicht erfasst';
+  if(c.s==='ok')return 'in Frist bis '+fmt(c.next);
+  return 'nicht vorgesehen';
+}
+var PILL={ueber:'Überfällig',bald:'Bald fällig',offen:'Nicht erfasst',ok:'In Frist',na:'–',inaktiv:'Inaktiv'};
+function tasks(){
+  var t=[];
+  S.devices.forEach(function(dv){
+    if(dv.status!=='aktiv')return;
+    ['stk','mtk'].forEach(function(a){var c=chk(dv,a);if(c.s==='ueber'||c.s==='bald'||c.s==='offen')t.push({dv:dv,a:a,c:c})});
+  });
+  var o={ueber:0,bald:1,offen:2};
+  t.sort(function(x,y){return (o[x.c.s]-o[y.c.s])||String(x.c.next).localeCompare(String(y.c.next))||String(x.dv.name).localeCompare(String(y.dv.name),'de')});
+  return t;
+}
+function getDev(id){return S.devices.find(function(d){return d.id===id})}
+
+/* ---------- Rendering ---------- */
+function toast(t){var el=$('#toast');el.textContent=t;el.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(function(){el.style.display='none'},2800)}
+
+function render(){
+  var app=$('#app');if(!app)return;
+  var ae=document.activeElement,fid=ae&&ae.id,ss=ae&&ae.selectionStart;
+  var h='<header><div><h1>Geräteverwaltung</h1><div class="mut small">Medizinprodukte · STK / MTK</div></div></header>';
+  if(S.store==='volatile')h+='<div class="banner err">Der Browser-Speicher ist nicht verfügbar (z. B. privater Modus). Eingaben gehen beim Schließen verloren.</div>';
+  if(!ready()){h+='<div class="empty">Lade Daten …</div>'}
+  else if(S.tab==='faellig')h+=viewFaellig();
+  else if(S.tab==='bestand')h+=viewBestand();
+  else if(S.tab==='protokoll')h+=viewProtokoll();
+  else h+=viewMehr();
+  h+='<nav><div class="in">'+[['faellig','Fällig'],['bestand','Bestand'],['protokoll','Protokoll'],['mehr','Mehr']].map(function(t){return '<button class="'+(S.tab===t[0]?'on':'')+'" data-act="tab" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div></nav>';
+  app.innerHTML=h;
+  if(fid){var el=document.getElementById(fid);if(el){el.focus();try{if(ss!=null)el.setSelectionRange(ss,ss)}catch(e){}}}
+}
+
+function viewFaellig(){
+  var t=tasks(),n={ueber:0,bald:0,offen:0};t.forEach(function(x){n[x.c.s]++});
+  var h='<div class="tiles"><div class="tile ueber"><b>'+n.ueber+'</b>überfällig</div><div class="tile bald"><b>'+n.bald+'</b>bald fällig<div class="mut small">≤ '+S.settings.warnDays+' Tage</div></div><div class="tile offen"><b>'+n.offen+'</b>nicht erfasst</div></div>';
+  h+=backupBanner();
+  if(!S.devices.length)return h+emptyState();
+  if(!t.length)return h+'<div class="banner ok">Alles in Frist – keine STK/MTK-Prüfung offen.</div>';
+  if(n.ueber)h+='<div class="banner err"><b>'+n.ueber+' Prüfung'+(n.ueber===1?'':'en')+' überfällig.</b> Betroffene Geräte dürfen ggf. nicht betrieben werden – bitte zeitnah prüfen lassen.</div>';
+  t.forEach(function(x){
+    h+='<div class="card bar '+x.c.s+'"><div class="row sp"><b>'+esc(x.dv.name)+'</b><span class="pill '+x.c.s+'">'+PILL[x.c.s]+'</span></div>'
+     +'<div class="mut small">'+meta(x.dv)+'</div>'
+     +'<div style="margin:6px 0"><b>'+x.a.toUpperCase()+'</b> · '+chkLabel(x.c)+'</div>'
+     +'<div class="row"><button class="pri sm" data-act="insp" data-id="'+esc(x.dv.id)+'" data-art="'+x.a+'">Prüfung erfassen</button><button class="sm" data-act="open" data-id="'+esc(x.dv.id)+'">Details</button></div></div>';
+  });
+  return h;
+}
+function backupBanner(){
+  if(!S.devices.length)return '';
+  var lb=S.settings.lastBackup,d=lb?-daysUntil(lb):null;
+  if(lb&&d<=30)return '';
+  return '<div class="banner warn"><div>Die Daten liegen nur auf diesem Gerät. '+(lb?'Letzte Sicherung vor '+d+' Tagen.':'Es gibt noch keine Sicherung.')+'</div><div style="margin-top:6px"><button class="sm" data-act="tab" data-tab="mehr">Jetzt sichern</button></div></div>';
+}
+function meta(dv){return [dv.typ||dv.hersteller,dv.inventarnr&&('Inv. '+dv.inventarnr),dv.ort].filter(Boolean).map(esc).join(' · ')}
+function emptyState(){return '<div class="empty"><p><b>Noch keine Geräte erfasst.</b></p><p>Lege ein Gerät an, importiere eine Liste (Tab „Mehr“) oder sieh dir zuerst Beispieldaten an.</p><div class="row" style="justify-content:center"><button class="pri" data-act="new">Gerät anlegen</button><button data-act="demo">Beispieldaten laden</button></div></div>'}
+
+function viewBestand(){
+  var c={alle:S.devices.length,ueber:0,bald:0,offen:0,ok:0,inaktiv:0};
+  S.devices.forEach(function(d){c[devStatus(d)]++});
+  var orte=Array.from(new Set(S.devices.map(function(d){return d.ort}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'de')});
+  var h='<div class="row sp"><h3 style="margin:0">Bestandsverzeichnis</h3><button class="pri" data-act="new">+ Gerät</button></div>';
+  if(!S.devices.length)return h+emptyState();
+  h+='<div class="g2" style="margin-top:10px"><input id="q" type="search" placeholder="Suchen (Name, Inv.-Nr., SN …)" value="'+esc(S.q)+'"><select id="ort"><option value="">Alle Standorte</option>'+orte.map(function(o){return '<option'+(o===S.ort?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select></div>';
+  var F=[['alle','Alle'],['ueber','Überfällig'],['bald','Bald fällig'],['offen','Nicht erfasst'],['ok','In Frist'],['inaktiv','Inaktiv']];
+  h+='<div class="chips">'+F.map(function(f){return '<button class="chip '+(S.filter===f[0]?'on':'')+'" data-act="filter" data-f="'+f[0]+'">'+f[1]+' ('+c[f[0]]+')</button>'}).join('')+'</div>';
+  var q=S.q.trim().toLowerCase();
+  var list=S.devices.filter(function(d){
+    if(S.filter!=='alle'&&devStatus(d)!==S.filter)return false;
+    if(S.ort&&d.ort!==S.ort)return false;
+    if(q&&![d.name,d.hersteller,d.typ,d.seriennr,d.inventarnr,d.ort,d.bemerkung].join(' ').toLowerCase().includes(q))return false;
+    return true;
+  }).sort(function(a,b){return String(a.name).localeCompare(String(b.name),'de')});
+  if(!list.length)return h+'<div class="empty">Keine Geräte für diesen Filter.</div>';
+  list.forEach(function(d){
+    var st=devStatus(d);
+    h+='<div class="card bar click '+st+'" data-act="open" data-id="'+esc(d.id)+'"><div class="row sp"><b>'+esc(d.name)+'</b><span class="pill '+st+'">'+PILL[st]+'</span></div><div class="mut small">'+meta(d)+'</div>';
+    if(d.status==='aktiv'){
+      ['stk','mtk'].forEach(function(a){var k=chk(d,a);if(k.s==='na')return;h+='<div class="row small" style="margin-top:5px"><b>'+a.toUpperCase()+'</b><span class="pill '+k.s+'">'+PILL[k.s]+'</span><span class="mut">'+(k.s==='offen'?'':(k.s==='ok'?'bis '+fmt(k.next):chkLabel(k)))+'</span></div>'});
+    }else h+='<div class="small mut" style="margin-top:5px">Status: '+esc(statusName(d.status))+'</div>';
+    h+='</div>';
+  });
+  return h;
+}
+function statusName(s){return {aktiv:'in Betrieb',gesperrt:'gesperrt / außer Betrieb',ausgesondert:'ausgesondert'}[s]||s}
+
+function viewProtokoll(){
+  var list=S.inspections.slice().sort(function(a,b){return String(b.datum).localeCompare(String(a.datum))||(b.createdAt||0)-(a.createdAt||0)});
+  var h='<div class="row sp"><h3 style="margin:0">Prüfprotokoll</h3>'+(DL&&list.length?'<button class="sm" data-act="exp-prot">CSV</button>':'')+'</div><p class="mut small">Chronologische Dokumentation aller durchgeführten Prüfungen. Einträge sind bewusst nicht löschbar.</p>';
+  if(!list.length)return h+'<div class="empty">Noch keine Prüfung dokumentiert.</div>';
+  list.slice(0,300).forEach(function(i){h+='<div class="card">'+inspRow(i,true)+'</div>'});
+  if(list.length>300)h+='<div class="mut small">Es werden die letzten 300 Einträge angezeigt. Der CSV-Export enthält alle.</div>';
+  return h;
+}
+function ergClass(e){return e==='bestanden'?'ok':(e==='nicht bestanden'?'ueber':'bald')}
+function inspRow(i,withDev){
+  return '<div class="row sp"><b>'+esc(fmt(i.datum))+' · '+esc((i.art||'').toUpperCase())+'</b><span class="pill '+ergClass(i.ergebnis)+'">'+esc(i.ergebnis)+'</span></div>'
+   +(withDev?'<div>'+esc(i.deviceName)+(i.inventarnr?' <span class="mut">· Inv. '+esc(i.inventarnr)+'</span>':'')+'</div>':'')
+   +'<div class="mut small">Prüfer: '+esc(i.pruefer)+(i.protokollNr?' · Nr. '+esc(i.protokollNr):'')+(i.naechste?' · nächste: '+esc(fmt(i.naechste)):'')+'</div>'
+   +(i.bemerkung?'<div class="small" style="margin-top:3px">'+esc(i.bemerkung)+'</div>':'');
+}
+
+function viewMehr(){
+  var h='<h3>Einstellungen</h3><div class="card"><label style="margin-top:0">Vorwarnzeit (Tage vor Ablauf)</label><input id="warn" type="number" min="1" max="365" value="'+S.settings.warnDays+'"><div class="mut small" style="margin-top:6px">Ab dieser Frist erscheint eine Prüfung als „bald fällig“.</div></div>';
+  h+='<h3>Geräte importieren (CSV)</h3><div class="card"><p class="small mut" style="margin-top:0">Aus Excel als CSV speichern (Trennzeichen ; oder ,). Erste Zeile = Spaltenüberschriften, z. B. Bezeichnung, Hersteller, Typ, Seriennummer, Inventarnummer, Standort, Anschaffungsjahr, Letzte STK, Nächste STK, STK-Intervall, MTK-Pflicht, Letzte MTK, Nächste MTK, MTK-Intervall, Bemerkung. Datum: TT.MM.JJJJ oder MM/JJJJ (Plakette).</p>'
+   +'<input type="file" id="csvfile" accept=".csv,.txt,text/csv,text/plain"><label>… oder hier einfügen</label><textarea id="csvtext" placeholder="Bezeichnung;Hersteller;…">'+esc(S.importText)+'</textarea>'
+   +'<div class="row" style="margin-top:10px"><button data-act="imp-prev">Prüfen</button>'+(DL?'<button data-act="tmpl">Vorlage (CSV)</button>':'')+'</div>';
+  if(S.importPrev){var p=S.importPrev;
+    h+='<div style="margin-top:10px"><b>'+p.ok.length+' Gerät'+(p.ok.length===1?'':'e')+' importierbar</b>'+(p.dupes?', '+p.dupes+' bereits vorhanden (werden übersprungen)':'')+(p.errs.length?', '+p.errs.length+' Zeile(n) mit Fehlern':'')+'.';
+    if(p.errs.length)h+='<pre>'+esc(p.errs.slice(0,15).join('\n'))+'</pre>';
+    if(p.ok.length)h+='<div style="margin-top:8px"><button class="pri" data-act="imp-run">'+p.ok.length+' importieren</button></div>';
+    h+='</div>';}
+  h+='</div><h3>Erinnerungen im Handy-Kalender</h3><div class="card"><p class="small mut" style="margin-top:0">Erstellt eine Kalenderdatei mit allen anstehenden STK/MTK-Fristen (Erinnerung 14 Tage vorher und am Fälligkeitstag um 9 Uhr). Am besten in einen eigenen Kalender „Prüffristen“ importieren; nach Änderungen diesen Kalender löschen und die Datei neu importieren.</p><button data-act="exp-ics">Kalenderdatei (.ics) erstellen</button></div>';
+  var lb=S.settings.lastBackup;
+  h+='<h3>Export / Sicherung</h3><div class="card"><div class="small mut" style="margin-bottom:8px">Letzte Komplettsicherung: '+(lb?fmt(lb):'noch nie')+'</div><div class="row"><button class="pri" data-act="exp-json">Komplettsicherung (JSON)</button><button data-act="exp-best">Bestand (CSV)</button><button data-act="exp-prot">Protokoll (CSV)</button></div><label>Sicherung wiederherstellen (JSON)</label><input type="file" id="bakfile" accept=".json,application/json"></div>';
+  h+='<h3>Hinweise</h3><div class="card small mut">Alle Daten liegen ausschließlich im Speicher dieses Geräts (Browser-Datenbank). Es gibt keinen Server und keine automatische Sicherung: bitte regelmäßig eine Komplettsicherung erstellen und sicher ablegen (z. B. in iCloud Drive). Auf dem iPhone die App über „Zum Home-Bildschirm“ installieren, sonst kann Safari Webdaten nach längerer Nichtnutzung löschen. Keine Patientendaten erfassen. Fristen, Intervalle und Pflichtprüfungen sind nach Herstellerangabe und MPBetreibV zu bestimmen und mit der Medizintechnik abzustimmen.</div>';
+  if(S.devices.some(function(d){return d.demo})||S.inspections.some(function(d){return d.demo}))h+='<div style="margin-top:10px"><button class="dng" data-act="demo-rm">Beispieldaten entfernen</button></div>';
+  else if(!S.devices.length)h+='<div style="margin-top:10px"><button data-act="demo">Beispieldaten laden</button></div>';
+  return h;
+}
+
+/* ---------- Modal ---------- */
+function renderModal(){
+  var m=$('#modal');
+  if(!S.modal){m.className='';m.innerHTML='';return}
+  m.className='on';
+  m.innerHTML='<div class="back" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true">'+modalHtml()+'</div>';
+}
+function renderModalIfDetail(){if(S.modal&&S.modal.type==='detail'){if(!getDev(S.modal.id)){S.modal=null}renderModal()}}
+function modalHtml(){
+  var m=S.modal;
+  if(m.type==='detail')return detailHtml(getDev(m.id));
+  if(m.type==='dev')return devForm(m.dv||{},m.isNew);
+  if(m.type==='insp')return inspForm(getDev(m.id),m.art);
+  if(m.type==='confirm')return '<h2>'+esc(m.title)+'</h2><p>'+esc(m.text)+'</p><div class="row" style="margin-top:14px"><button class="dng" data-act="'+m.act+'" data-id="'+esc(m.id||'')+'">'+esc(m.ok)+'</button><button data-act="close">Abbrechen</button></div>';
+  return '';
+}
+function detailHtml(dv){
+  if(!dv)return '';
+  var st=devStatus(dv);
+  var h='<div class="row sp"><h2>'+esc(dv.name)+'</h2><button class="sm" data-act="close">Schließen</button></div><span class="pill '+st+'">'+PILL[st]+'</span>';
+  var rows=[['Hersteller',dv.hersteller],['Typ / Modell',dv.typ],['Seriennummer',dv.seriennr],['Inventarnr.',dv.inventarnr],['Standort',dv.ort],['Anschaffung',dv.baujahr],['Betriebsstatus',statusName(dv.status)]];
+  h+='<dl>'+rows.filter(function(r){return r[1]}).map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>'}).join('')+'</dl>';
+  ['stk','mtk'].forEach(function(a){
+    var c=chk(dv,a);
+    h+='<div class="card bar '+c.s+'" style="margin-top:8px"><div class="row sp"><b>'+a.toUpperCase()+(a==='mtk'&&!dv.mtkPflicht?' (nicht vorgesehen)':'')+'</b><span class="pill '+c.s+'">'+PILL[c.s]+'</span></div>'
+     +(c.s==='na'?'':'<div class="small">Letzte Prüfung: '+fmt(dv[a+'Last'])+' · Nächste: '+fmt(dv[a+'Next'])+' · Intervall: '+(dv[a+'Int']||24)+' Mon.</div><div class="small mut">'+chkLabel(c)+'</div>')
+     +'<div style="margin-top:6px"><button class="pri sm" data-act="insp" data-id="'+esc(dv.id)+'" data-art="'+a+'">'+a.toUpperCase()+' erfassen</button></div></div>';
+  });
+  if(dv.bemerkung)h+='<p class="small">'+esc(dv.bemerkung)+'</p>';
+  h+='<div class="row" style="margin:12px 0"><button class="sm" data-act="edit" data-id="'+esc(dv.id)+'">Bearbeiten</button><button class="sm" data-act="dup" data-id="'+esc(dv.id)+'">Kopieren</button>';
+  if(dv.status==='aktiv')h+='<button class="sm" data-act="setst" data-st="gesperrt" data-id="'+esc(dv.id)+'">Sperren</button><button class="sm" data-act="setst" data-st="ausgesondert" data-id="'+esc(dv.id)+'">Aussondern</button>';
+  else h+='<button class="sm" data-act="setst" data-st="aktiv" data-id="'+esc(dv.id)+'">Wieder in Betrieb</button>';
+  h+='<button class="sm dng" data-act="del" data-id="'+esc(dv.id)+'">Löschen</button></div>';
+  var hist=S.inspections.filter(function(i){return i.deviceId===dv.id}).sort(function(a,b){return String(b.datum).localeCompare(String(a.datum))||(b.createdAt||0)-(a.createdAt||0)});
+  h+='<h3>Prüfhistorie</h3>'+(hist.length?hist.map(function(i){return '<div class="hist">'+inspRow(i,false)+'</div>'}).join(''):'<div class="mut small">Noch keine Prüfung dokumentiert.</div>');
+  return h;
+}
+
+function devForm(dv,isNew){
+  var v=function(k){return esc(dv[k]==null?'':dv[k])};
+  var stkInt=dv.stkInt||24,mtkInt=dv.mtkInt||24;
+  var stkMan=dv.stkNext&&dv.stkNext!==addMonths(dv.stkLast,stkInt)?' data-manual="1"':'';
+  var mtkMan=dv.mtkNext&&dv.mtkNext!==addMonths(dv.mtkLast,mtkInt)?' data-manual="1"':'';
+  return '<h2>'+(isNew?'Gerät anlegen':'Gerät bearbeiten')+'</h2><form id="devform" data-id="'+esc(dv.id||'')+'" autocomplete="off">'
+  +'<label>Bezeichnung *</label><input name="name" value="'+v('name')+'" required placeholder="z. B. Infusionspumpe">'
+  +'<div class="g2"><div><label>Hersteller</label><input name="hersteller" value="'+v('hersteller')+'"></div><div><label>Typ / Modell</label><input name="typ" value="'+v('typ')+'"></div></div>'
+  +'<div class="g2"><div><label>Seriennummer / Loscode</label><input name="seriennr" value="'+v('seriennr')+'"></div><div><label>Inventarnummer</label><input name="inventarnr" value="'+v('inventarnr')+'"></div></div>'
+  +'<div class="g2"><div><label>Standort / Raum</label><input name="ort" value="'+v('ort')+'"></div><div><label>Anschaffungsjahr</label><input name="baujahr" inputmode="numeric" maxlength="4" value="'+v('baujahr')+'"></div></div>'
+  +'<label>Betriebsstatus</label><select name="status">'+['aktiv','gesperrt','ausgesondert'].map(function(s){return '<option value="'+s+'"'+((dv.status||'aktiv')===s?' selected':'')+'>'+statusName(s)+'</option>'}).join('')+'</select>'
+  +'<h3>STK – Sicherheitstechnische Kontrolle</h3><div class="g2"><div><label>Letzte STK</label><input type="date" name="stkLast" value="'+v('stkLast')+'"></div><div><label>Intervall (Monate)</label><input type="number" name="stkInt" min="1" max="120" value="'+stkInt+'"></div></div>'
+  +'<label>Nächste STK fällig <span class="mut">(steht oft auf der Plakette)</span></label><input type="date" name="stkNext" value="'+v('stkNext')+'"'+stkMan+'>'
+  +'<h3>MTK – Messtechnische Kontrolle</h3><label class="chk"><input type="checkbox" name="mtkPflicht"'+(dv.mtkPflicht?' checked':'')+'> MTK vorgeschrieben</label>'
+  +'<div id="mtkbox"'+(dv.mtkPflicht?'':' hidden')+'><div class="g2"><div><label>Letzte MTK</label><input type="date" name="mtkLast" value="'+v('mtkLast')+'"></div><div><label>Intervall (Monate)</label><input type="number" name="mtkInt" min="1" max="120" value="'+mtkInt+'"></div></div>'
+  +'<label>Nächste MTK fällig</label><input type="date" name="mtkNext" value="'+v('mtkNext')+'"'+mtkMan+'></div>'
+  +'<label>Bemerkung</label><textarea name="bemerkung">'+v('bemerkung')+'</textarea><div id="ferr" class="err" hidden></div>'
+  +'<div class="row" style="margin-top:16px"><button class="pri" type="submit">Speichern</button><button type="button" data-act="close">Abbrechen</button></div></form>';
+}
+function inspForm(dv,art){
+  if(!dv)return '';
+  art=art||'stk';
+  var next=addMonths(todayStr(),dv[art+'Int']||24);
+  return '<h2>Prüfung erfassen</h2><div class="mut">'+esc(dv.name)+(dv.inventarnr?' · Inv. '+esc(dv.inventarnr):'')+'</div><form id="inspform" data-dev="'+esc(dv.id)+'" autocomplete="off">'
+  +'<label>Art der Prüfung</label><div class="seg"><label><input type="radio" name="art" value="stk"'+(art==='stk'?' checked':'')+'> STK</label><label><input type="radio" name="art" value="mtk"'+(art==='mtk'?' checked':'')+'> MTK</label></div>'
+  +'<div class="g2"><div><label>Prüfdatum *</label><input type="date" name="datum" value="'+todayStr()+'" required></div><div><label>Ergebnis *</label><select name="ergebnis"><option>bestanden</option><option>bestanden mit Mängeln</option><option>nicht bestanden</option></select></div></div>'
+  +'<label>Prüfer / Firma *</label><input name="pruefer" value="'+esc(S.lastPruefer)+'" required>'
+  +'<div class="g2"><div><label>Protokoll-/Plakettennr.</label><input name="protokollNr"></div><div><label>Nächste Prüfung fällig</label><input type="date" name="naechste" value="'+next+'"></div></div>'
+  +'<label>Bemerkung / Mängel</label><textarea name="bemerkung"></textarea>'
+  +'<div id="sperrbox" hidden><label class="chk"><input type="checkbox" name="sperren" checked> Gerät sperren (außer Betrieb nehmen)</label><div class="small mut">Bei „nicht bestanden“ bleibt der bisherige Fristenstand unverändert.</div></div>'
+  +'<div id="ferr" class="err" hidden></div><div class="row" style="margin-top:16px"><button class="pri" type="submit">Prüfung dokumentieren</button><button type="button" data-act="close">Abbrechen</button></div></form>';
+}
+
+/* ---------- Aktionen ---------- */
+function showErr(msg){var e=$('#ferr');if(e){e.textContent=msg;e.hidden=!msg}}
+var DEVSTR=['name','hersteller','typ','seriennr','inventarnr','ort','baujahr','bemerkung'];
+
+async function saveDevice(form){
+  var f=new FormData(form),g=function(k){return String(f.get(k)||'').trim()};
+  var id=form.dataset.id,old=id?getDev(id):null;
+  var o={status:g('status')||'aktiv',stkLast:g('stkLast'),stkInt:parseInt(g('stkInt'),10)||24,stkNext:g('stkNext'),mtkPflicht:f.get('mtkPflicht')==='on',mtkLast:g('mtkLast'),mtkInt:parseInt(g('mtkInt'),10)||24,mtkNext:g('mtkNext')};
+  DEVSTR.forEach(function(k){o[k]=g(k)});
+  if(!o.name)return showErr('Bitte eine Bezeichnung angeben.');
+  if(o.baujahr&&!/^\d{4}$/.test(o.baujahr))return showErr('Anschaffungsjahr bitte vierstellig angeben.');
+  if(o.inventarnr&&S.devices.some(function(d){return d.id!==id&&d.inventarnr&&d.inventarnr.toLowerCase()===o.inventarnr.toLowerCase()}))return showErr('Diese Inventarnummer ist bereits vergeben.');
+  if(!o.stkNext&&o.stkLast)o.stkNext=addMonths(o.stkLast,o.stkInt);
+  if(o.mtkPflicht&&!o.mtkNext&&o.mtkLast)o.mtkNext=addMonths(o.mtkLast,o.mtkInt);
+  if(old){o.createdAt=old.createdAt;if(old.demo)o.demo=true}else o.createdAt=Date.now();
+  try{await saveDoc('devices',id||uid(),o);S.modal=null;renderModal();toast('Gerät gespeichert')}catch(e){showErr('Speichern fehlgeschlagen. Bitte erneut versuchen.')}
+}
+async function saveInsp(form){
+  var f=new FormData(form),g=function(k){return String(f.get(k)||'').trim()};
+  var dv=getDev(form.dataset.dev);if(!dv)return;
+  var art=g('art')==='mtk'?'mtk':'stk',datum=g('datum'),naechste=g('naechste'),erg=g('ergebnis'),pruefer=g('pruefer');
+  if(!parseD(datum))return showErr('Bitte ein gültiges Prüfdatum angeben.');
+  if(!pruefer)return showErr('Bitte den Prüfer angeben.');
+  if(naechste&&!parseD(naechste))return showErr('Ungültiges Datum für die nächste Prüfung.');
+  if(erg!=='nicht bestanden'&&!naechste&&!addMonths(datum,dv[art+'Int']||24))return showErr('Bitte die nächste Fälligkeit angeben.');
+  var insp={deviceId:dv.id,deviceName:dv.name,inventarnr:dv.inventarnr||'',seriennr:dv.seriennr||'',art:art,datum:datum,pruefer:pruefer,ergebnis:erg,protokollNr:g('protokollNr'),naechste:erg==='nicht bestanden'?'':(naechste||addMonths(datum,dv[art+'Int']||24)),bemerkung:g('bemerkung'),createdAt:Date.now()};
+  if(dv.demo)insp.demo=true;
+  try{
+    await saveDoc('inspections',uid(),insp);
+    var rest=Object.assign({},dv);delete rest.id;
+    if(erg!=='nicht bestanden'){rest[art+'Last']=datum;rest[art+'Next']=insp.naechste;if(art==='mtk')rest.mtkPflicht=true;await saveDoc('devices',dv.id,rest)}
+    else if(f.get('sperren')==='on'){rest.status='gesperrt';await saveDoc('devices',dv.id,rest)}
+    S.lastPruefer=pruefer;try{localStorage.setItem('gv_pruefer',pruefer)}catch(e){}
+    S.modal={type:'detail',id:dv.id};renderModal();toast('Prüfung dokumentiert');
+  }catch(e){showErr('Speichern fehlgeschlagen. Bitte Eintrag in der Historie prüfen und ggf. erneut versuchen.')}
+}
+async function setStatus(id,st){var dv=getDev(id);if(!dv)return;var r=Object.assign({},dv);delete r.id;r.status=st;try{await saveDoc('devices',id,r);toast('Status geändert')}catch(e){toast('Speichern fehlgeschlagen')}}
+
+/* ---------- CSV ---------- */
+function parseCSV(t){
+  t=String(t||'').replace(/^﻿/,'');
+  var first=t.split(/\r?\n/)[0]||'',cnt=function(c){return first.split(c).length-1};
+  var del=';';if(cnt(',')>cnt(';')&&cnt(',')>=cnt('\t'))del=',';if(cnt('\t')>cnt(';')&&cnt('\t')>cnt(','))del='\t';
+  var rows=[],row=[],cell='',q=false;
+  for(var i=0;i<t.length;i++){
+    var c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){cell+='"';i++}else q=false}else cell+=c}
+    else if(c==='"')q=true;
+    else if(c===del){row.push(cell);cell=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(cell);cell='';if(row.some(function(x){return x.trim()}))rows.push(row);row=[]}
+    else cell+=c;
+  }
+  row.push(cell);if(row.some(function(x){return x.trim()}))rows.push(row);
+  return rows;
+}
+var SYN={name:['bezeichnung','name','gerät','gerat','geraet','gerätebezeichnung','geraetebezeichnung'],hersteller:['hersteller'],typ:['typ','modell','typmodell'],seriennr:['seriennummer','seriennr','sn','loscode','serialnumber'],inventarnr:['inventarnummer','inventarnr','invnr','inventar','inv'],ort:['standort','ort','raum','bereich'],baujahr:['anschaffung','anschaffungsjahr','baujahr'],stkLast:['letztestk','stkletzte','stklast','stkdatum'],stkNext:['nächstestk','naechstestk','stknächste','stknaechste','stkfällig','stkfaellig','stknext'],stkInt:['stkintervall','stkintervallmonate'],mtkPflicht:['mtkpflicht','mtk','mtkpflichtig'],mtkLast:['letztemtk','mtkletzte','mtklast'],mtkNext:['nächstemtk','naechstemtk','mtknächste','mtknaechste','mtkfällig','mtkfaellig','mtknext'],mtkInt:['mtkintervall','mtkintervallmonate'],bemerkung:['bemerkung','notiz','kommentar']};
+function mapRows(rows){
+  var res={ok:[],errs:[],dupes:0};
+  if(rows.length<2){res.errs.push('Keine Datenzeilen gefunden (erste Zeile = Überschriften).');return res}
+  var idx={};
+  rows[0].forEach(function(h,i){var n=h.toLowerCase().replace(/[^a-z0-9äöüß]/g,'');Object.keys(SYN).forEach(function(k){if(idx[k]==null&&SYN[k].indexOf(n)>=0)idx[k]=i})});
+  if(idx.name==null){res.errs.push('Spalte „Bezeichnung“ nicht gefunden.');return res}
+  var seen={};S.devices.forEach(function(d){seen[key(d)]=1});
+  function key(d){return d.inventarnr?'i:'+d.inventarnr.toLowerCase():'s:'+String(d.seriennr||'').toLowerCase()+'|'+String(d.name||'').toLowerCase()}
+  for(var r=1;r<rows.length;r++){
+    var row=rows[r],g=function(k){return idx[k]==null?'':String(row[idx[k]]||'').trim()};
+    var d={status:'aktiv',createdAt:Date.now()},bad=[];
+    ['name','hersteller','typ','seriennr','inventarnr','ort','baujahr','bemerkung'].forEach(function(k){d[k]=g(k)});
+    if(!d.name){res.errs.push('Zeile '+(r+1)+': Bezeichnung fehlt');continue}
+    ['stkLast','stkNext','mtkLast','mtkNext'].forEach(function(k){var x=parseDateAny(g(k));if(x===null)bad.push(k);else d[k]=x});
+    if(bad.length){res.errs.push('Zeile '+(r+1)+' ('+d.name+'): Datum ungültig ('+bad.join(', ')+')');continue}
+    d.stkInt=parseInt(g('stkInt'),10)||24;d.mtkInt=parseInt(g('mtkInt'),10)||24;
+    var mp=g('mtkPflicht').toLowerCase();
+    d.mtkPflicht=['ja','j','x','1','true','yes','y'].indexOf(mp)>=0||(mp===''&&!!(d.mtkLast||d.mtkNext));
+    if(!d.stkNext&&d.stkLast)d.stkNext=addMonths(d.stkLast,d.stkInt);
+    if(d.mtkPflicht&&!d.mtkNext&&d.mtkLast)d.mtkNext=addMonths(d.mtkLast,d.mtkInt);
+    var k=key(d);if(seen[k]){res.dupes++;continue}seen[k]=1;
+    res.ok.push(d);
+  }
+  return res;
+}
+function csvCell(v){v=String(v==null?'':v);if(/^[=+@\t\r]/.test(v))v="'"+v;return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function toCSV(rows){return '﻿'+rows.map(function(r){return r.map(csvCell).join(';')}).join('\r\n')}
+async function dl(name,data){
+  var ext=(name.split('.').pop()||'').toLowerCase();
+  var type={json:'application/json',ics:'text/calendar',csv:'text/csv'}[ext]||'text/plain';
+  var blob=new Blob([data],{type:type+';charset=utf-8'});
+  try{
+    var file=new File([blob],name,{type:type});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return true}
+  }catch(e){if(e&&e.name==='AbortError')return false}
+  try{
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);toast('Datei wird gespeichert …');return true;
+  }catch(e){toast('Download fehlgeschlagen');return false}
+}
+var BEST_H=['Bezeichnung','Hersteller','Typ','Seriennummer','Inventarnummer','Standort','Anschaffungsjahr','Betriebsstatus','Letzte STK','Nächste STK','STK-Intervall','MTK-Pflicht','Letzte MTK','Nächste MTK','MTK-Intervall','Bemerkung'];
+function expBest(){
+  var rows=[BEST_H].concat(S.devices.slice().sort(function(a,b){return String(a.name).localeCompare(String(b.name),'de')}).map(function(d){return [d.name,d.hersteller,d.typ,d.seriennr,d.inventarnr,d.ort,d.baujahr,d.status,fmt2(d.stkLast),fmt2(d.stkNext),d.stkInt,d.mtkPflicht?'ja':'nein',fmt2(d.mtkLast),fmt2(d.mtkNext),d.mtkInt,d.bemerkung]}));
+  dl('bestandsverzeichnis_'+todayStr()+'.csv',toCSV(rows));
+}
+function fmt2(s){return s?fmt(s):''}
+function expProt(){
+  var l=S.inspections.slice().sort(function(a,b){return String(b.datum).localeCompare(String(a.datum))});
+  dl('pruefprotokoll_'+todayStr()+'.csv',toCSV([['Datum','Art','Gerät','Inventarnummer','Seriennummer','Ergebnis','Prüfer','Protokollnr.','Nächste Fälligkeit','Bemerkung']].concat(l.map(function(i){return [fmt(i.datum),(i.art||'').toUpperCase(),i.deviceName,i.inventarnr,i.seriennr,i.ergebnis,i.pruefer,i.protokollNr,fmt2(i.naechste),i.bemerkung]}))));
+}
+function demoData(){
+  var t=todayStr(),mk=function(o,n){return Object.assign({status:'aktiv',demo:true,createdAt:Date.now(),stkInt:24,mtkInt:24},o)};
+  return [
+    mk({name:'Infusionspumpe (Beispiel)',hersteller:'Beispiel-Hersteller',typ:'IP-100',seriennr:'DEMO-001',inventarnr:'DEMO-INV-001',ort:'Station 1',baujahr:'2021',stkNext:addDays(t,-20),stkLast:addMonths(addDays(t,-20),-24),mtkPflicht:true,mtkNext:addDays(t,200),mtkLast:addMonths(addDays(t,200),-24)}),
+    mk({name:'Defibrillator (Beispiel)',hersteller:'Beispiel-Hersteller',typ:'DEF-5',seriennr:'DEMO-002',inventarnr:'DEMO-INV-002',ort:'Notaufnahme',baujahr:'2020',stkNext:addDays(t,25),stkLast:addMonths(addDays(t,25),-24),mtkPflicht:true,mtkNext:addDays(t,40),mtkLast:addMonths(addDays(t,40),-24)}),
+    mk({name:'Patientenmonitor (Beispiel)',hersteller:'Beispiel-Hersteller',typ:'PM-9',seriennr:'DEMO-003',inventarnr:'DEMO-INV-003',ort:'Station 1',baujahr:'2023',stkNext:addDays(t,300),stkLast:addMonths(addDays(t,300),-24)}),
+    mk({name:'Blutdruckmessgerät (Beispiel)',hersteller:'Beispiel-Hersteller',typ:'BP-2',seriennr:'DEMO-004',inventarnr:'DEMO-INV-004',ort:'Ambulanz',baujahr:'2019',mtkPflicht:true})
+  ];
+}
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click',async function(e){
+  var el=e.target.closest('[data-act]');if(!el)return;
+  var a=el.dataset.act,id=el.dataset.id;
+  if(a==='tab'){S.tab=el.dataset.tab;render();window.scrollTo(0,0)}
+  else if(a==='filter'){S.filter=el.dataset.f;render()}
+  else if(a==='open'){S.modal={type:'detail',id:id};renderModal()}
+  else if(a==='close'){S.modal=null;renderModal()}
+  else if(a==='new'){S.modal={type:'dev',dv:{},isNew:true};renderModal()}
+  else if(a==='edit'){S.modal={type:'dev',dv:getDev(id),isNew:false};renderModal()}
+  else if(a==='dup'){var d=Object.assign({},getDev(id));['id','seriennr','inventarnr','stkLast','stkNext','mtkLast','mtkNext'].forEach(function(k){delete d[k]});d.status='aktiv';delete d.demo;S.modal={type:'dev',dv:d,isNew:true};renderModal()}
+  else if(a==='insp'){S.modal={type:'insp',id:id,art:el.dataset.art};renderModal()}
+  else if(a==='setst')await setStatus(id,el.dataset.st);
+  else if(a==='del'){S.modal={type:'confirm',title:'Gerät löschen?',text:'Das Gerät wird aus dem Bestand entfernt. Bereits dokumentierte Prüfungen bleiben im Protokoll erhalten. Für ausgemusterte Geräte ist „Aussondern“ meist besser.',ok:'Endgültig löschen',act:'delok',id:id};renderModal()}
+  else if(a==='delok'){try{await delDoc('devices',id);S.modal=null;renderModal();toast('Gerät gelöscht')}catch(x){toast('Löschen fehlgeschlagen')}}
+  else if(a==='demo'){try{for(var d2 of demoData())await saveDoc('devices',uid(),d2);toast('Beispieldaten geladen')}catch(x){toast('Fehlgeschlagen')}}
+  else if(a==='demo-rm'){try{for(var dv of S.devices.filter(function(x){return x.demo}))await delDoc('devices',dv.id);for(var i of S.inspections.filter(function(x){return x.demo}))await delDoc('inspections',i.id);toast('Beispieldaten entfernt')}catch(x){toast('Fehlgeschlagen')}}
+  else if(a==='imp-prev'){S.importPrev=mapRows(parseCSV(S.importText));render()}
+  else if(a==='imp-run'){
+    var p=S.importPrev;if(!p||!p.ok.length)return;var n=0;el.disabled=true;
+    try{for(var x of p.ok){await saveDoc('devices',uid(),x,true);n++}S.importPrev=null;S.importText='';render();toast(n+' Geräte importiert')}
+    catch(err){toast('Import nach '+n+' Geräten abgebrochen');S.importPrev=null;render()}
+  }
+  else if(a==='tmpl')dl('geraete_vorlage.csv',toCSV([BEST_H,['Infusionspumpe','Beispiel-Hersteller','IP-100','SN12345','INV-001','Station 1','2021','aktiv','01.03.2025','','24','ja','01.03.2025','','24','']]));
+  else if(a==='exp-best')expBest();
+  else if(a==='exp-prot')expProt();
+  else if(a==='exp-json')expJson();
+  else if(a==='exp-ics')expIcs();
+});
+document.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='devform')saveDevice(e.target);else if(e.target.id==='inspform')saveInsp(e.target)});
+document.addEventListener('input',function(e){
+  var t=e.target,f=t.form;
+  if(t.id==='q'){S.q=t.value;render()}
+  else if(t.id==='csvtext'){S.importText=t.value;S.importPrev=null}
+  else if(f&&f.id==='devform'){
+    if(t.name==='stkNext'||t.name==='mtkNext')t.dataset.manual='1';
+    if(['stkLast','stkInt','mtkLast','mtkInt'].indexOf(t.name)>=0){var a=t.name.slice(0,3),nx=f.elements[a+'Next'];if(nx&&nx.dataset.manual!=='1'){var r=addMonths(f.elements[a+'Last'].value,f.elements[a+'Int'].value);if(r)nx.value=r}}
+  }else if(f&&f.id==='inspform'){
+    if(t.name==='naechste')t.dataset.manual='1';
+    var dv=getDev(f.dataset.dev),nx2=f.elements.naechste;
+    if(['art','datum'].indexOf(t.name)>=0&&nx2&&nx2.dataset.manual!=='1'&&dv){var ar=f.elements.art.value;var r2=addMonths(f.elements.datum.value,dv[ar+'Int']||24);if(r2)nx2.value=r2}
+  }
+});
+document.addEventListener('change',function(e){
+  var t=e.target,f=t.form;
+  if(t.id==='ort'){S.ort=t.value;render()}
+  else if(t.id==='warn'){var w=Math.max(1,Math.min(365,parseInt(t.value,10)||60));S.settings.warnDays=w;saveDoc('settings','main',Object.assign({},S.settings,{warnDays:w})).then(function(){render()}).catch(function(){toast('Speichern fehlgeschlagen')})}
+  else if(t.id==='csvfile'&&t.files&&t.files[0]){var fr=new FileReader();fr.onload=function(){S.importText=String(fr.result||'');S.importPrev=mapRows(parseCSV(S.importText));render()};fr.readAsText(t.files[0])}
+  else if(t.id==='bakfile'&&t.files&&t.files[0]){var fr2=new FileReader();fr2.onload=function(){restoreBackup(String(fr2.result||''))};fr2.readAsText(t.files[0])}
+  else if(f&&f.id==='devform'&&t.name==='mtkPflicht'){$('#mtkbox').hidden=!t.checked}
+  else if(f&&f.id==='inspform'&&t.name==='ergebnis'){var nb=t.value==='nicht bestanden';$('#sperrbox').hidden=!nb}
+});
+
+/* ---------- Lokale Datenbank (IndexedDB) ---------- */
+function idbOpen(){return new Promise(function(res,rej){var r=indexedDB.open('geraeteverwaltung',1);r.onupgradeneeded=function(){var d=r.result;['devices','inspections','settings'].forEach(function(n){if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)};r.onblocked=function(){rej(new Error('blocked'))}})}
+function idbReq(store,mode,fn){return new Promise(function(res,rej){var tx=IDBH.transaction(store,mode),rq=fn(tx.objectStore(store));tx.oncomplete=function(){res(rq&&rq.result)};tx.onerror=tx.onabort=function(){rej(tx.error)}})}
+
+/* ---------- Sicherung, Wiederherstellung, Kalender ---------- */
+async function expJson(){
+  var ok=await dl('geraeteverwaltung_sicherung_'+todayStr()+'.json',JSON.stringify({exportiert:new Date().toISOString(),geraete:S.devices,pruefungen:S.inspections},null,1));
+  if(ok){try{await saveDoc('settings','main',Object.assign({},S.settings,{lastBackup:todayStr()}))}catch(e){}}
+}
+async function restoreBackup(text){
+  var j;try{j=JSON.parse(text)}catch(e){toast('Datei ist keine gültige Sicherung');return}
+  var dv=Array.isArray(j.geraete)?j.geraete:[],ins=Array.isArray(j.pruefungen)?j.pruefungen:[];
+  if(!dv.length&&!ins.length){toast('Keine Daten in der Sicherung gefunden');return}
+  var okid=/^[A-Za-z0-9_.:@+~-]{1,100}$/,nd=0,ni=0;
+  try{
+    for(var x of dv){if(!x||typeof x!=='object'||!x.name)continue;var r=Object.assign({},x);var id=okid.test(String(x.id||''))?x.id:uid();delete r.id;await saveDoc('devices',id,r,true);nd++}
+    for(var y of ins){if(!y||typeof y!=='object'||!y.deviceId||!parseD(y.datum))continue;var q=Object.assign({},y);var iid=okid.test(String(y.id||''))?y.id:uid();delete q.id;await saveDoc('inspections',iid,q,true);ni++}
+    render();toast(nd+' Geräte und '+ni+' Prüfungen wiederhergestellt');
+  }catch(e){render();toast('Wiederherstellung nach '+nd+' Geräten abgebrochen')}
+}
+function icsEsc(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n')}
+function icsFold(l){var o=[];while(l.length>70){o.push(l.slice(0,70));l=' '+l.slice(70)}o.push(l);return o.join('\r\n')}
+function buildIcs(){
+  var n=new Date(),stamp=n.getUTCFullYear()+pad(n.getUTCMonth()+1)+pad(n.getUTCDate())+'T'+pad(n.getUTCHours())+pad(n.getUTCMinutes())+pad(n.getUTCSeconds())+'Z',t=todayStr(),cnt=0;
+  var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Geraeteverwaltung//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Prüffristen Medizingeräte'];
+  S.devices.forEach(function(dv){
+    if(dv.status!=='aktiv')return;
+    ['stk','mtk'].forEach(function(a){
+      var c=chk(dv,a);if(!c.next||c.next<t)return;
+      var A=a.toUpperCase(),d0=c.next.replace(/-/g,''),d1=addDays(c.next,1).replace(/-/g,'');
+      L.push('BEGIN:VEVENT','UID:'+dv.id+'-'+a+'@geraeteverwaltung','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+d0,'DTEND;VALUE=DATE:'+d1,
+        'SUMMARY:'+icsEsc(A+' fällig: '+dv.name+(dv.inventarnr?' ('+dv.inventarnr+')':'')),
+        'DESCRIPTION:'+icsEsc([dv.typ,dv.seriennr&&('SN '+dv.seriennr),dv.ort].filter(Boolean).join(' · ')),'TRANSP:TRANSPARENT',
+        'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(A+' in 14 Tagen fällig: '+dv.name),'TRIGGER:-P13DT15H','END:VALARM',
+        'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(A+' heute fällig: '+dv.name),'TRIGGER:PT9H','END:VALARM','END:VEVENT');
+      cnt++;
+    });
+  });
+  L.push('END:VCALENDAR');
+  return cnt?L.map(icsFold).join('\r\n')+'\r\n':'';
+}
+function expIcs(){var s=buildIcs();if(!s){toast('Keine anstehenden Fristen mit Datum');return}dl('pruef-fristen.ics',s)}
+
+/* ---------- Start ---------- */
+async function init(){
+  render();
+  try{
+    IDBH=await idbOpen();
+    var all=await Promise.all(['devices','inspections','settings'].map(function(c){return idbReq(c,'readonly',function(s){return s.getAll()})}));
+    ['devices','inspections','settings'].forEach(function(c,i){all[i].forEach(function(r){var id=r.id;delete r.id;mem[c][id]=r})});
+    S.store='local';
+  }catch(e){IDBH=null;S.store='volatile'}
+  S.loaded.d=S.loaded.i=true;syncMem();render();
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){})}catch(e){}
+  try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(function(){})}catch(e){}
+}
+//TESTHOOK
+init();
+})();
+</script>
+</body>
+</html>
