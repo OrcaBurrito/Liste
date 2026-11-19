@@ -253,6 +253,7 @@ function inspRow(i,withDev){
 function viewMehr(){
   var h='<h3>Einstellungen</h3><div class="card"><label style="margin-top:0">Vorwarnzeit (Tage vor Ablauf)</label><input id="warn" type="number" min="1" max="365" value="'+S.settings.warnDays+'"><div class="mut small" style="margin-top:6px">Ab dieser Frist erscheint eine Prüfung als „bald fällig“.</div></div>';
   h+='<div class="card"><label style="margin-top:0">Einrichtung / Station (Kopfzeile der PDFs)</label><input id="einr" maxlength="120" value="'+esc(S.settings.einrichtung||'')+'"><label>Erstellt von (Fußzeile der PDFs)</label><input id="ersteller" maxlength="120" value="'+esc(S.settings.ersteller||'')+'"></div>';
+  h+='<h3>Briefpapier-Modus (PDF)</h3><div class="card"><label class="chk" style="margin-top:0"><input type="checkbox" id="brief"'+(S.settings.briefpapier==='1'?' checked':'')+'> PDFs ohne eigene Kopf-/Fußzeile und Seitenzahl erstellen</label><div class="small mut">Für das Auflegen auf das QM-Briefpapier. Oben und unten bleibt der angegebene Rand frei, damit nichts in Kopf- oder Fußzeile des QM-Dokuments läuft.</div>'+(S.settings.briefpapier==='1'?'<div class="g2"><div><label>Rand oben (mm)</label><input id="rtop" inputmode="decimal" maxlength="5" value="'+esc(S.settings.rTop||'35')+'"></div><div><label>Rand unten (mm)</label><input id="rbot" inputmode="decimal" maxlength="5" value="'+esc(S.settings.rBot||'25')+'"></div></div><label>Rand links/rechts (mm)</label><input id="rside" inputmode="decimal" maxlength="5" value="'+esc(S.settings.rSide||'15')+'">':'')+'</div>';
   h+='<h3>Geräte importieren (CSV)</h3><div class="card"><p class="small mut" style="margin-top:0">Aus Excel als CSV speichern (Trennzeichen ; oder ,). Erste Zeile = Spaltenüberschriften, z. B. Bezeichnung, Hersteller, Typ, Seriennummer, Inventarnummer, Standort, Anschaffungsjahr, Letzte STK, Nächste STK, STK-Intervall, MTK-Pflicht, Letzte MTK, Nächste MTK, MTK-Intervall, Bemerkung. Datum: TT.MM.JJJJ oder MM/JJJJ (Plakette).</p>'
    +'<input type="file" id="csvfile" accept=".csv,.txt,text/csv,text/plain"><label>… oder hier einfügen</label><textarea id="csvtext" placeholder="Bezeichnung;Hersteller;…">'+esc(S.importText)+'</textarea>'
    +'<div class="row" style="margin-top:10px"><button data-act="imp-prev">Prüfen</button>'+(DL?'<button data-act="tmpl">Vorlage (CSV)</button>':'')+'</div>';
@@ -519,6 +520,10 @@ document.addEventListener('change',function(e){
   else if(t.id==='photoform')addPending(t);
   else if(t.id==='photoadd')addToInsp(t);
   else if(t.id==='einr')saveSetting('einrichtung',t.value);
+  else if(t.id==='brief')saveSetting('briefpapier',t.checked?'1':'0');
+  else if(t.id==='rtop')saveSetting('rTop',t.value);
+  else if(t.id==='rbot')saveSetting('rBot',t.value);
+  else if(t.id==='rside')saveSetting('rSide',t.value);
   else if(t.id==='ersteller')saveSetting('ersteller',t.value);
   else if(t.id==='bakfile'&&t.files&&t.files[0]){var fr2=new FileReader();fr2.onload=function(){restoreBackup(String(fr2.result||''))};fr2.readAsText(t.files[0])}
   else if(f&&f.id==='devform'&&t.name==='mtkPflicht'){$('#mtkbox').hidden=!t.checked}
@@ -526,7 +531,7 @@ document.addEventListener('change',function(e){
 });
 
 /* ---------- PDF-Erzeugung (ohne Bibliothek) ---------- */
-var APP_VERSION='2.0';
+var APP_VERSION='2.1';
 var HW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
 var HB=[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
 var BASEL={192:65,193:65,194:65,195:65,196:65,197:65,199:67,200:69,201:69,202:69,203:69,204:73,205:73,206:73,207:73,209:78,210:79,211:79,212:79,213:79,214:79,217:85,218:85,219:85,220:85,221:89,224:97,225:97,226:97,227:97,228:97,229:97,231:99,232:101,233:101,234:101,235:101,236:105,237:105,238:105,239:105,241:110,242:111,243:111,244:111,245:111,246:111,249:117,250:117,251:117,252:117,253:121,255:121};
@@ -558,8 +563,12 @@ function wrapText(s,bold,size,maxW){
 }
 function PdfDoc(o){
   this.land=!!o.landscape;this.W=this.land?841.89:595.28;this.H=this.land?595.28:841.89;
-  this.m=36;this.top=70;this.bot=44;this.title=o.title||'';this.pages=[];this.imgs=[];
+  var st=S.settings,mm=2.8346,num=function(v,d,lo,hi){v=parseFloat(String(v).replace(',','.'));return isFinite(v)?Math.max(lo,Math.min(hi,v)):d};
+  this.letter=st.briefpapier==='1';
+  if(this.letter){this.m=num(st.rSide,15,5,60)*mm;this.top=num(st.rTop,35,5,120)*mm;this.bot=num(st.rBot,25,5,120)*mm}else{this.m=36;this.top=70;this.bot=44}
+  this.title=o.title||'';this.pages=[];this.imgs=[];
   this.stamp=fmt(todayStr());this.newPage();
+  if(this.letter)this.para('Stand: '+this.stamp,{size:8.5,col:[.4,.4,.45],gap:4});
 }
 var PP=PdfDoc.prototype;
 PP.n=function(v){return String(Math.round(v*100)/100)};
@@ -568,10 +577,12 @@ PP.line=function(x1,y1,x2,y2,w,g){this.cur.push(this.n(g)+' G '+this.n(w)+' w '+
 PP.rect=function(x,y,w,h,c){this.cur.push(this.n(c[0])+' '+this.n(c[1])+' '+this.n(c[2])+' rg '+this.n(x)+' '+this.n(this.H-y-h)+' '+this.n(w)+' '+this.n(h)+' re f')};
 PP.newPage=function(){
   this.cur=[];this.curImgs={};this.pages.push({ops:this.cur,imgs:this.curImgs});
+  if(!this.letter){
   this.text(this.m,22,this.title,true,12,[.1,.15,.25]);
   if(S.settings.einrichtung)this.text(this.m,38,S.settings.einrichtung,false,9,[.4,.4,.45]);
   var r='Stand: '+this.stamp;this.text(this.W-this.m-strW(r,false,9),24,r,false,9,[.4,.4,.45]);
   this.line(this.m,56,this.W-this.m,56,0.8,.6);
+  }
   this.y=this.top;
 };
 PP.room=function(h){if(this.y+h>this.H-this.bot){this.newPage();return true}return false};
@@ -594,6 +605,7 @@ PP.kv=function(rows,keyW){
 };
 PP.table=function(cols,head,rows,o){
   o=o||{};var self=this,fs=o.size||8,lh=fs*1.3,pd=3,x0=this.m,tw=cols.reduce(function(a,b){return a+b},0);
+  var avail=this.W-2*this.m;if(tw>avail||(this.letter&&tw!==avail)){var k=avail/tw;cols=cols.map(function(c){return c*k});tw=avail}
   function drawHead(){var h=lh+2*pd;self.room(h+2*lh+2*pd);self.rect(x0,self.y,tw,h,[.9,.92,.95]);var x=x0;head.forEach(function(t,i){self.text(x+pd,self.y+pd,t,true,fs);x+=cols[i]});self.y+=h}
   function norm(c,w){var parts=Array.isArray(c)?c:[c],out=[];parts.forEach(function(p){if(p==null||p==='')return;if(typeof p!=='object')p={t:String(p)};wrapText(p.t,!!p.bold,fs,w-2*pd).forEach(function(l){out.push({s:l,bold:!!p.bold,col:p.col})})});return out}
   drawHead();
@@ -614,7 +626,7 @@ PP.image=function(img,maxW,maxH){
 PP.build=function(){
   var n=this.pages.length,chunks=[],pos=0,offs=[],nImg=this.imgs.length,i;
   var ft=(S.settings.ersteller?'Erstellt von '+S.settings.ersteller+' · ':'')+'Geräteverwaltung STK/MTK';
-  for(i=0;i<n;i++){
+  for(i=0;i<n&&!this.letter;i++){
     this.cur=this.pages[i].ops;
     this.cur.push('0.8 G 0.5 w '+this.n(this.m)+' '+this.n(this.bot-6)+' m '+this.n(this.W-this.m)+' '+this.n(this.bot-6)+' l S');
     this.text(this.m,this.H-this.bot+10,ft,false,8,[.45,.45,.5]);
@@ -843,7 +855,7 @@ async function restoreBackup(text){
       await storePhoto(z.id,buf,{inspId:z.inspId,deviceId:String(z.deviceId||''),name:String(z.name||'Foto').slice(0,80),w:Math.round(z.w),h:Math.round(z.h),size:buf.byteLength,thumb:z.thumb,createdAt:+z.createdAt||Date.now()},true);nf++;
     }
     var es=j.einstellungen;
-    if(es&&typeof es==='object'){var st=Object.assign({},S.settings);if(+es.warnDays>0)st.warnDays=Math.min(365,Math.round(+es.warnDays));['einrichtung','ersteller'].forEach(function(key){if(typeof es[key]==='string')st[key]=es[key].slice(0,120)});await saveDoc('settings','main',st,true)}
+    if(es&&typeof es==='object'){var st=Object.assign({},S.settings);if(+es.warnDays>0)st.warnDays=Math.min(365,Math.round(+es.warnDays));['einrichtung','ersteller','briefpapier','rTop','rBot','rSide'].forEach(function(key){if(typeof es[key]==='string')st[key]=es[key].slice(0,120)});await saveDoc('settings','main',st,true)}
     render();toast(nd+' Geräte, '+ni+' Prüfungen, '+nf+' Fotos wiederhergestellt');
   }catch(e){render();toast('Wiederherstellung nach '+nd+' Geräten abgebrochen')}
 }
