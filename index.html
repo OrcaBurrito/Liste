@@ -68,12 +68,19 @@ dl{display:grid;grid-template-columns:130px 1fr;gap:5px 10px;margin:8px 0}dt{col
 .empty{text-align:center;padding:28px 10px;color:var(--mut)}
 .err{color:var(--red);font-size:14px;margin-top:10px}
 pre{white-space:pre-wrap;font-size:12.5px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px;max-height:160px;overflow:auto}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.th{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--bd);cursor:pointer;background:var(--bg)}
+.pp{position:relative;display:inline-block}
+.pp .x{position:absolute;top:-8px;right:-8px;width:26px;height:26px;min-height:0;padding:0;border-radius:99px;line-height:1;font-size:16px}
+.photo{width:100%;border-radius:8px;border:1px solid var(--bd)}
+.vh{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="modal"></div>
 <div id="toast" role="status"></div>
+<input type="file" id="photoadd" class="vh" accept="image/*" multiple>
 <script>
 (function(){
 'use strict';
@@ -103,13 +110,13 @@ function parseDateAny(s){
 }
 
 /* ---------- Zustand ---------- */
-var S={devices:[],inspections:[],settings:{warnDays:60},tab:'faellig',filter:'alle',q:'',ort:'',loaded:{d:false,i:false},slow:false,store:'none',modal:null,importText:'',importPrev:null,lastPruefer:''};
-var IDBH=null,DL=true,mem={devices:Object.create(null),inspections:Object.create(null),settings:Object.create(null)};
+var S={devices:[],inspections:[],photos:[],pending:[],busy:0,file:null,addTo:'',settings:{warnDays:60},tab:'faellig',filter:'alle',q:'',ort:'',loaded:{d:false,i:false},slow:false,store:'none',modal:null,importText:'',importPrev:null,lastPruefer:''};
+var IDBH=null,DL=true,mem={devices:Object.create(null),inspections:Object.create(null),settings:Object.create(null),photos:Object.create(null)};
 try{S.lastPruefer=localStorage.getItem('gv_pruefer')||''}catch(e){}
 var ready=function(){return S.loaded.d&&S.loaded.i};
 
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
-function syncMem(){S.devices=Object.keys(mem.devices).map(function(k){return Object.assign({id:k},mem.devices[k])});S.inspections=Object.keys(mem.inspections).map(function(k){return Object.assign({id:k},mem.inspections[k])});if(mem.settings.main)S.settings=Object.assign({warnDays:60},mem.settings.main)}
+function syncMem(){S.devices=Object.keys(mem.devices).map(function(k){return Object.assign({id:k},mem.devices[k])});S.inspections=Object.keys(mem.inspections).map(function(k){return Object.assign({id:k},mem.inspections[k])});S.photos=Object.keys(mem.photos).map(function(k){return Object.assign({id:k},mem.photos[k])});if(mem.settings.main)S.settings=Object.assign({warnDays:60},mem.settings.main)}
 async function saveDoc(col,id,data,quiet){
   data=clean(data);
   if(IDBH)await idbReq(col,'readwrite',function(s){return s.put(Object.assign({},data,{id:id}))});
@@ -138,7 +145,7 @@ function devStatus(dv){
 function plural(n){return n===1?'Tag':'Tage'}
 function chkLabel(c){
   if(c.s==='ueber')return 'überfällig seit '+fmt(c.next)+' ('+(-c.d)+' '+plural(-c.d)+')';
-  if(c.s==='bald')return c.d===0?'heute fällig':'fällig '+fmt(c.next)+' (in '+c.d+' '+plural(c.d)+')';
+  if(c.s==='bald')return c.d===0?'heute fällig':'fällig '+fmt(c.next)+' (in '+c.d+' '+(c.d===1?'Tag':'Tagen')+')';
   if(c.s==='offen')return 'Stand nicht erfasst';
   if(c.s==='ok')return 'in Frist bis '+fmt(c.next);
   return 'nicht vorgesehen';
@@ -229,7 +236,7 @@ function statusName(s){return {aktiv:'in Betrieb',gesperrt:'gesperrt / außer Be
 
 function viewProtokoll(){
   var list=S.inspections.slice().sort(function(a,b){return String(b.datum).localeCompare(String(a.datum))||(b.createdAt||0)-(a.createdAt||0)});
-  var h='<div class="row sp"><h3 style="margin:0">Prüfprotokoll</h3>'+(DL&&list.length?'<button class="sm" data-act="exp-prot">CSV</button>':'')+'</div><p class="mut small">Chronologische Dokumentation aller durchgeführten Prüfungen. Einträge sind bewusst nicht löschbar.</p>';
+  var h='<div class="row sp"><h3 style="margin:0">Prüfprotokoll</h3>'+(list.length?'<button class="sm" data-act="exp-open" data-kind="prot">PDF</button>':'')+'</div><p class="mut small">Chronologische Dokumentation aller durchgeführten Prüfungen. Einträge sind bewusst nicht löschbar.</p>';
   if(!list.length)return h+'<div class="empty">Noch keine Prüfung dokumentiert.</div>';
   list.slice(0,300).forEach(function(i){h+='<div class="card">'+inspRow(i,true)+'</div>'});
   if(list.length>300)h+='<div class="mut small">Es werden die letzten 300 Einträge angezeigt. Der CSV-Export enthält alle.</div>';
@@ -240,11 +247,12 @@ function inspRow(i,withDev){
   return '<div class="row sp"><b>'+esc(fmt(i.datum))+' · '+esc((i.art||'').toUpperCase())+'</b><span class="pill '+ergClass(i.ergebnis)+'">'+esc(i.ergebnis)+'</span></div>'
    +(withDev?'<div>'+esc(i.deviceName)+(i.inventarnr?' <span class="mut">· Inv. '+esc(i.inventarnr)+'</span>':'')+'</div>':'')
    +'<div class="mut small">Prüfer: '+esc(i.pruefer)+(i.protokollNr?' · Nr. '+esc(i.protokollNr):'')+(i.naechste?' · nächste: '+esc(fmt(i.naechste)):'')+'</div>'
-   +(i.bemerkung?'<div class="small" style="margin-top:3px">'+esc(i.bemerkung)+'</div>':'');
+   +(i.bemerkung?'<div class="small" style="margin-top:3px">'+esc(i.bemerkung)+'</div>':'')+photoRow(i.id);
 }
 
 function viewMehr(){
   var h='<h3>Einstellungen</h3><div class="card"><label style="margin-top:0">Vorwarnzeit (Tage vor Ablauf)</label><input id="warn" type="number" min="1" max="365" value="'+S.settings.warnDays+'"><div class="mut small" style="margin-top:6px">Ab dieser Frist erscheint eine Prüfung als „bald fällig“.</div></div>';
+  h+='<div class="card"><label style="margin-top:0">Einrichtung / Station (Kopfzeile der PDFs)</label><input id="einr" maxlength="120" value="'+esc(S.settings.einrichtung||'')+'"><label>Erstellt von (Fußzeile der PDFs)</label><input id="ersteller" maxlength="120" value="'+esc(S.settings.ersteller||'')+'"></div>';
   h+='<h3>Geräte importieren (CSV)</h3><div class="card"><p class="small mut" style="margin-top:0">Aus Excel als CSV speichern (Trennzeichen ; oder ,). Erste Zeile = Spaltenüberschriften, z. B. Bezeichnung, Hersteller, Typ, Seriennummer, Inventarnummer, Standort, Anschaffungsjahr, Letzte STK, Nächste STK, STK-Intervall, MTK-Pflicht, Letzte MTK, Nächste MTK, MTK-Intervall, Bemerkung. Datum: TT.MM.JJJJ oder MM/JJJJ (Plakette).</p>'
    +'<input type="file" id="csvfile" accept=".csv,.txt,text/csv,text/plain"><label>… oder hier einfügen</label><textarea id="csvtext" placeholder="Bezeichnung;Hersteller;…">'+esc(S.importText)+'</textarea>'
    +'<div class="row" style="margin-top:10px"><button data-act="imp-prev">Prüfen</button>'+(DL?'<button data-act="tmpl">Vorlage (CSV)</button>':'')+'</div>';
@@ -254,9 +262,10 @@ function viewMehr(){
     if(p.ok.length)h+='<div style="margin-top:8px"><button class="pri" data-act="imp-run">'+p.ok.length+' importieren</button></div>';
     h+='</div>';}
   h+='</div><h3>Erinnerungen im Handy-Kalender</h3><div class="card"><p class="small mut" style="margin-top:0">Erstellt eine Kalenderdatei mit allen anstehenden STK/MTK-Fristen (Erinnerung 14 Tage vorher und am Fälligkeitstag um 9 Uhr). Am besten in einen eigenen Kalender „Prüffristen“ importieren; nach Änderungen diesen Kalender löschen und die Datei neu importieren.</p><button data-act="exp-ics">Kalenderdatei (.ics) erstellen</button></div>';
+  h+='<h3>Berichte als PDF</h3><div class="card"><p class="small mut" style="margin-top:0">PDF erstellen und direkt per Mail an die Firma senden oder in Dateien ablegen. Ein Gerätedossier (mit Prüfhistorie und Fotos) findest du in den Details eines Geräts.</p><div class="row"><button class="pri" data-act="exp-open" data-kind="best">Bestandsverzeichnis</button><button class="pri" data-act="exp-open" data-kind="prot">Prüfprotokolle</button></div></div>';
   var lb=S.settings.lastBackup;
-  h+='<h3>Export / Sicherung</h3><div class="card"><div class="small mut" style="margin-bottom:8px">Letzte Komplettsicherung: '+(lb?fmt(lb):'noch nie')+'</div><div class="row"><button class="pri" data-act="exp-json">Komplettsicherung (JSON)</button><button data-act="exp-best">Bestand (CSV)</button><button data-act="exp-prot">Protokoll (CSV)</button></div><label>Sicherung wiederherstellen (JSON)</label><input type="file" id="bakfile" accept=".json,application/json"></div>';
-  h+='<h3>Hinweise</h3><div class="card small mut">Alle Daten liegen ausschließlich im Speicher dieses Geräts (Browser-Datenbank). Es gibt keinen Server und keine automatische Sicherung: bitte regelmäßig eine Komplettsicherung erstellen und sicher ablegen (z. B. in iCloud Drive). Auf dem iPhone die App über „Zum Home-Bildschirm“ installieren, sonst kann Safari Webdaten nach längerer Nichtnutzung löschen. Keine Patientendaten erfassen. Fristen, Intervalle und Pflichtprüfungen sind nach Herstellerangabe und MPBetreibV zu bestimmen und mit der Medizintechnik abzustimmen.</div>';
+  h+='<h3>Sicherung</h3><div class="card"><div class="small mut" style="margin-bottom:8px">Letzte Komplettsicherung: '+(lb?fmt(lb):'noch nie')+'</div><button class="pri" data-act="exp-json">Komplettsicherung (inkl. Fotos)</button><label>Sicherung wiederherstellen (JSON)</label><input type="file" id="bakfile" accept=".json,application/json"></div>';
+  h+='<h3>Hinweise</h3><div class="card small mut">Alle Daten und Fotos liegen ausschließlich im Speicher dieses Geräts. Es gibt keinen Server und keine automatische Sicherung: bitte regelmäßig eine Komplettsicherung erstellen und sicher ablegen (z. B. in iCloud Drive). Jedes Foto belegt etwa 0,3 MB. Auf dem iPhone die App über „Zum Home-Bildschirm“ installieren, sonst kann Safari Webdaten nach längerer Nichtnutzung löschen. Keine Patientendaten erfassen. Fristen, Intervalle und Pflichtprüfungen sind nach Herstellerangabe und MPBetreibV zu bestimmen und mit der Medizintechnik abzustimmen.<div style="margin-top:8px">Version '+APP_VERSION+'</div></div>';
   if(S.devices.some(function(d){return d.demo})||S.inspections.some(function(d){return d.demo}))h+='<div style="margin-top:10px"><button class="dng" data-act="demo-rm">Beispieldaten entfernen</button></div>';
   else if(!S.devices.length)h+='<div style="margin-top:10px"><button data-act="demo">Beispieldaten laden</button></div>';
   return h;
@@ -268,6 +277,7 @@ function renderModal(){
   if(!S.modal){m.className='';m.innerHTML='';return}
   m.className='on';
   m.innerHTML='<div class="back" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true">'+modalHtml()+'</div>';
+  if(S.modal.type==='photo')loadBig(S.modal.id);
 }
 function renderModalIfDetail(){if(S.modal&&S.modal.type==='detail'){if(!getDev(S.modal.id)){S.modal=null}renderModal()}}
 function modalHtml(){
@@ -275,6 +285,10 @@ function modalHtml(){
   if(m.type==='detail')return detailHtml(getDev(m.id));
   if(m.type==='dev')return devForm(m.dv||{},m.isNew);
   if(m.type==='insp')return inspForm(getDev(m.id),m.art);
+  if(m.type==='photo')return photoModalHtml(m);
+  if(m.type==='export')return exportForm(m);
+  if(m.type==='work')return '<h2>'+esc(m.text)+'</h2><p class="mut small">Bitte einen Moment warten.</p>';
+  if(m.type==='file')return fileHtml();
   if(m.type==='confirm')return '<h2>'+esc(m.title)+'</h2><p>'+esc(m.text)+'</p><div class="row" style="margin-top:14px"><button class="dng" data-act="'+m.act+'" data-id="'+esc(m.id||'')+'">'+esc(m.ok)+'</button><button data-act="close">Abbrechen</button></div>';
   return '';
 }
@@ -291,7 +305,7 @@ function detailHtml(dv){
      +'<div style="margin-top:6px"><button class="pri sm" data-act="insp" data-id="'+esc(dv.id)+'" data-art="'+a+'">'+a.toUpperCase()+' erfassen</button></div></div>';
   });
   if(dv.bemerkung)h+='<p class="small">'+esc(dv.bemerkung)+'</p>';
-  h+='<div class="row" style="margin:12px 0"><button class="sm" data-act="edit" data-id="'+esc(dv.id)+'">Bearbeiten</button><button class="sm" data-act="dup" data-id="'+esc(dv.id)+'">Kopieren</button>';
+  h+='<div class="row" style="margin:12px 0"><button class="sm" data-act="edit" data-id="'+esc(dv.id)+'">Bearbeiten</button><button class="sm" data-act="dup" data-id="'+esc(dv.id)+'">Kopieren</button><button class="sm" data-act="dossier" data-id="'+esc(dv.id)+'">PDF-Dossier</button>';
   if(dv.status==='aktiv')h+='<button class="sm" data-act="setst" data-st="gesperrt" data-id="'+esc(dv.id)+'">Sperren</button><button class="sm" data-act="setst" data-st="ausgesondert" data-id="'+esc(dv.id)+'">Aussondern</button>';
   else h+='<button class="sm" data-act="setst" data-st="aktiv" data-id="'+esc(dv.id)+'">Wieder in Betrieb</button>';
   h+='<button class="sm dng" data-act="del" data-id="'+esc(dv.id)+'">Löschen</button></div>';
@@ -329,6 +343,7 @@ function inspForm(dv,art){
   +'<label>Prüfer / Firma *</label><input name="pruefer" value="'+esc(S.lastPruefer)+'" required>'
   +'<div class="g2"><div><label>Protokoll-/Plakettennr.</label><input name="protokollNr"></div><div><label>Nächste Prüfung fällig</label><input type="date" name="naechste" value="'+next+'"></div></div>'
   +'<label>Bemerkung / Mängel</label><textarea name="bemerkung"></textarea>'
+  +'<label>Fotos vom Prüfprotokoll</label><input type="file" id="photoform" accept="image/*" multiple><div id="pph" class="thumbs"></div><div class="small mut">Foto aufnehmen oder aus den Fotos wählen (mehrere möglich).</div>'
   +'<div id="sperrbox" hidden><label class="chk"><input type="checkbox" name="sperren" checked> Gerät sperren (außer Betrieb nehmen)</label><div class="small mut">Bei „nicht bestanden“ bleibt der bisherige Fristenstand unverändert.</div></div>'
   +'<div id="ferr" class="err" hidden></div><div class="row" style="margin-top:16px"><button class="pri" type="submit">Prüfung dokumentieren</button><button type="button" data-act="close">Abbrechen</button></div></form>';
 }
@@ -353,6 +368,7 @@ async function saveDevice(form){
 async function saveInsp(form){
   var f=new FormData(form),g=function(k){return String(f.get(k)||'').trim()};
   var dv=getDev(form.dataset.dev);if(!dv)return;
+  if(S.busy)return showErr('Fotos werden noch verarbeitet – bitte kurz warten.');
   var art=g('art')==='mtk'?'mtk':'stk',datum=g('datum'),naechste=g('naechste'),erg=g('ergebnis'),pruefer=g('pruefer');
   if(!parseD(datum))return showErr('Bitte ein gültiges Prüfdatum angeben.');
   if(!pruefer)return showErr('Bitte den Prüfer angeben.');
@@ -361,10 +377,12 @@ async function saveInsp(form){
   var insp={deviceId:dv.id,deviceName:dv.name,inventarnr:dv.inventarnr||'',seriennr:dv.seriennr||'',art:art,datum:datum,pruefer:pruefer,ergebnis:erg,protokollNr:g('protokollNr'),naechste:erg==='nicht bestanden'?'':(naechste||addMonths(datum,dv[art+'Int']||24)),bemerkung:g('bemerkung'),createdAt:Date.now()};
   if(dv.demo)insp.demo=true;
   try{
-    await saveDoc('inspections',uid(),insp);
+    var iid=uid();await saveDoc('inspections',iid,insp);
     var rest=Object.assign({},dv);delete rest.id;
     if(erg!=='nicht bestanden'){rest[art+'Last']=datum;rest[art+'Next']=insp.naechste;if(art==='mtk')rest.mtkPflicht=true;await saveDoc('devices',dv.id,rest)}
     else if(f.get('sperren')==='on'){rest.status='gesperrt';await saveDoc('devices',dv.id,rest)}
+    var np=0,tot=S.pending.length;for(var ph of S.pending){try{await savePhoto(ph,iid,dv.id);np++}catch(e){}}
+    S.pending=[];if(np<tot)toast('Prüfung gespeichert, aber '+(tot-np)+' Foto(s) nicht');
     S.lastPruefer=pruefer;try{localStorage.setItem('gv_pruefer',pruefer)}catch(e){}
     S.modal={type:'detail',id:dv.id};renderModal();toast('Prüfung dokumentiert');
   }catch(e){showErr('Speichern fehlgeschlagen. Bitte Eintrag in der Historie prüfen und ggf. erneut versuchen.')}
@@ -418,7 +436,7 @@ function csvCell(v){v=String(v==null?'':v);if(/^[=+@\t\r]/.test(v))v="'"+v;retur
 function toCSV(rows){return '﻿'+rows.map(function(r){return r.map(csvCell).join(';')}).join('\r\n')}
 async function dl(name,data){
   var ext=(name.split('.').pop()||'').toLowerCase();
-  var type={json:'application/json',ics:'text/calendar',csv:'text/csv'}[ext]||'text/plain';
+  var type={json:'application/json',ics:'text/calendar',csv:'text/csv',pdf:'application/pdf'}[ext]||'text/plain';
   var blob=new Blob([data],{type:type+';charset=utf-8'});
   try{
     var file=new File([blob],name,{type:type});
@@ -430,15 +448,7 @@ async function dl(name,data){
   }catch(e){toast('Download fehlgeschlagen');return false}
 }
 var BEST_H=['Bezeichnung','Hersteller','Typ','Seriennummer','Inventarnummer','Standort','Anschaffungsjahr','Betriebsstatus','Letzte STK','Nächste STK','STK-Intervall','MTK-Pflicht','Letzte MTK','Nächste MTK','MTK-Intervall','Bemerkung'];
-function expBest(){
-  var rows=[BEST_H].concat(S.devices.slice().sort(function(a,b){return String(a.name).localeCompare(String(b.name),'de')}).map(function(d){return [d.name,d.hersteller,d.typ,d.seriennr,d.inventarnr,d.ort,d.baujahr,d.status,fmt2(d.stkLast),fmt2(d.stkNext),d.stkInt,d.mtkPflicht?'ja':'nein',fmt2(d.mtkLast),fmt2(d.mtkNext),d.mtkInt,d.bemerkung]}));
-  dl('bestandsverzeichnis_'+todayStr()+'.csv',toCSV(rows));
-}
 function fmt2(s){return s?fmt(s):''}
-function expProt(){
-  var l=S.inspections.slice().sort(function(a,b){return String(b.datum).localeCompare(String(a.datum))});
-  dl('pruefprotokoll_'+todayStr()+'.csv',toCSV([['Datum','Art','Gerät','Inventarnummer','Seriennummer','Ergebnis','Prüfer','Protokollnr.','Nächste Fälligkeit','Bemerkung']].concat(l.map(function(i){return [fmt(i.datum),(i.art||'').toUpperCase(),i.deviceName,i.inventarnr,i.seriennr,i.ergebnis,i.pruefer,i.protokollNr,fmt2(i.naechste),i.bemerkung]}))));
-}
 function demoData(){
   var t=todayStr(),mk=function(o,n){return Object.assign({status:'aktiv',demo:true,createdAt:Date.now(),stkInt:24,mtkInt:24},o)};
   return [
@@ -456,11 +466,11 @@ document.addEventListener('click',async function(e){
   if(a==='tab'){S.tab=el.dataset.tab;render();window.scrollTo(0,0)}
   else if(a==='filter'){S.filter=el.dataset.f;render()}
   else if(a==='open'){S.modal={type:'detail',id:id};renderModal()}
-  else if(a==='close'){S.modal=null;renderModal()}
+  else if(a==='close'){releaseBig();S.pending=[];S.modal=null;renderModal()}
   else if(a==='new'){S.modal={type:'dev',dv:{},isNew:true};renderModal()}
   else if(a==='edit'){S.modal={type:'dev',dv:getDev(id),isNew:false};renderModal()}
   else if(a==='dup'){var d=Object.assign({},getDev(id));['id','seriennr','inventarnr','stkLast','stkNext','mtkLast','mtkNext'].forEach(function(k){delete d[k]});d.status='aktiv';delete d.demo;S.modal={type:'dev',dv:d,isNew:true};renderModal()}
-  else if(a==='insp'){S.modal={type:'insp',id:id,art:el.dataset.art};renderModal()}
+  else if(a==='insp'){S.pending=[];S.modal={type:'insp',id:id,art:el.dataset.art};renderModal()}
   else if(a==='setst')await setStatus(id,el.dataset.st);
   else if(a==='del'){S.modal={type:'confirm',title:'Gerät löschen?',text:'Das Gerät wird aus dem Bestand entfernt. Bereits dokumentierte Prüfungen bleiben im Protokoll erhalten. Für ausgemusterte Geräte ist „Aussondern“ meist besser.',ok:'Endgültig löschen',act:'delok',id:id};renderModal()}
   else if(a==='delok'){try{await delDoc('devices',id);S.modal=null;renderModal();toast('Gerät gelöscht')}catch(x){toast('Löschen fehlgeschlagen')}}
@@ -473,12 +483,21 @@ document.addEventListener('click',async function(e){
     catch(err){toast('Import nach '+n+' Geräten abgebrochen');S.importPrev=null;render()}
   }
   else if(a==='tmpl')dl('geraete_vorlage.csv',toCSV([BEST_H,['Infusionspumpe','Beispiel-Hersteller','IP-100','SN12345','INV-001','Station 1','2021','aktiv','01.03.2025','','24','ja','01.03.2025','','24','']]));
-  else if(a==='exp-best')expBest();
-  else if(a==='exp-prot')expProt();
+  else if(a==='exp-open'){S.modal={type:'export',kind:el.dataset.kind};renderModal()}
+  else if(a==='dossier')runDossier(id);
+  else if(a==='photo'){S.modal={type:'photo',id:id,back:S.modal};renderModal()}
+  else if(a==='photo-close'){releaseBig();S.modal=S.modal.back||null;renderModal()}
+  else if(a==='photo-del'){S.modal={type:'confirm',title:'Foto löschen?',text:'Das Foto wird von dieser Prüfung entfernt. Der Prüfeintrag bleibt erhalten.',ok:'Foto löschen',act:'photo-delok',id:id,back:S.modal.back};renderModal()}
+  else if(a==='photo-delok'){var bk=S.modal&&S.modal.back;try{await delPhoto(id);releaseBig();S.modal=bk||null;renderModal();toast('Foto gelöscht')}catch(x){toast('Löschen fehlgeschlagen')}}
+  else if(a==='addphoto'){S.addTo=id;$('#photoadd').click()}
+  else if(a==='pp-del'){S.pending.splice(+el.dataset.i,1);renderPending()}
+  else if(a==='file-share')shareFile();
+  else if(a==='file-save')saveFileLocal();
+  else if(a==='file-close'){S.file=null;S.modal=null;renderModal()}
   else if(a==='exp-json')expJson();
   else if(a==='exp-ics')expIcs();
 });
-document.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='devform')saveDevice(e.target);else if(e.target.id==='inspform')saveInsp(e.target)});
+document.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='devform')saveDevice(e.target);else if(e.target.id==='inspform')saveInsp(e.target);else if(e.target.id==='expform')runExport(e.target)});
 document.addEventListener('input',function(e){
   var t=e.target,f=t.form;
   if(t.id==='q'){S.q=t.value;render()}
@@ -497,31 +516,343 @@ document.addEventListener('change',function(e){
   if(t.id==='ort'){S.ort=t.value;render()}
   else if(t.id==='warn'){var w=Math.max(1,Math.min(365,parseInt(t.value,10)||60));S.settings.warnDays=w;saveDoc('settings','main',Object.assign({},S.settings,{warnDays:w})).then(function(){render()}).catch(function(){toast('Speichern fehlgeschlagen')})}
   else if(t.id==='csvfile'&&t.files&&t.files[0]){var fr=new FileReader();fr.onload=function(){S.importText=String(fr.result||'');S.importPrev=mapRows(parseCSV(S.importText));render()};fr.readAsText(t.files[0])}
+  else if(t.id==='photoform')addPending(t);
+  else if(t.id==='photoadd')addToInsp(t);
+  else if(t.id==='einr')saveSetting('einrichtung',t.value);
+  else if(t.id==='ersteller')saveSetting('ersteller',t.value);
   else if(t.id==='bakfile'&&t.files&&t.files[0]){var fr2=new FileReader();fr2.onload=function(){restoreBackup(String(fr2.result||''))};fr2.readAsText(t.files[0])}
   else if(f&&f.id==='devform'&&t.name==='mtkPflicht'){$('#mtkbox').hidden=!t.checked}
   else if(f&&f.id==='inspform'&&t.name==='ergebnis'){var nb=t.value==='nicht bestanden';$('#sperrbox').hidden=!nb}
 });
 
-/* ---------- Lokale Datenbank (IndexedDB) ---------- */
-function idbOpen(){return new Promise(function(res,rej){var r=indexedDB.open('geraeteverwaltung',1);r.onupgradeneeded=function(){var d=r.result;['devices','inspections','settings'].forEach(function(n){if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)};r.onblocked=function(){rej(new Error('blocked'))}})}
-function idbReq(store,mode,fn){return new Promise(function(res,rej){var tx=IDBH.transaction(store,mode),rq=fn(tx.objectStore(store));tx.oncomplete=function(){res(rq&&rq.result)};tx.onerror=tx.onabort=function(){rej(tx.error)}})}
+/* ---------- PDF-Erzeugung (ohne Bibliothek) ---------- */
+var APP_VERSION='2.0';
+var HW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+var HB=[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
+var BASEL={192:65,193:65,194:65,195:65,196:65,197:65,199:67,200:69,201:69,202:69,203:69,204:73,205:73,206:73,207:73,209:78,210:79,211:79,212:79,213:79,214:79,217:85,218:85,219:85,220:85,221:89,224:97,225:97,226:97,227:97,228:97,229:97,231:99,232:101,233:101,234:101,235:101,236:105,237:105,238:105,239:105,241:110,242:111,243:111,244:111,245:111,246:111,249:117,250:117,251:117,252:117,253:121,255:121};
+var CP1252={8364:128,8218:130,402:131,8222:132,8230:133,8224:134,8225:135,710:136,8240:137,352:138,8249:139,338:140,381:142,8216:145,8217:146,8220:147,8221:148,8226:149,8211:150,8212:151,732:152,8482:153,353:154,8250:155,339:156,382:158,376:159};
+function cpByte(ch){var n=ch.charCodeAt(0);if(n<32)return 32;if(n<128||(n>=160&&n<=255))return n;return CP1252[n]!=null?CP1252[n]:63}
+function charW(bold,b){
+  if(b>=32&&b<=126)return (bold?HB:HW)[b-32];
+  if(BASEL[b])return charW(bold,BASEL[b]);
+  if(b===223)return 611;if(b===151||b===133)return 1000;if(b===183||b===160)return 278;if(b===149)return 350;
+  return 556;
+}
+function strW(s,bold,size){var w=0;s=String(s);for(var i=0;i<s.length;i++)w+=charW(bold,cpByte(s[i]));return w*size/1000}
+function pdfStr(s){s=String(s);var o='(';for(var i=0;i<s.length;i++){var b=cpByte(s[i]);if(b===40||b===41||b===92)o+='\\'+String.fromCharCode(b);else if(b>126)o+='\\'+('00'+b.toString(8)).slice(-3);else o+=String.fromCharCode(b)}return o+')'}
+function enc(s){var u=new Uint8Array(s.length);for(var i=0;i<s.length;i++)u[i]=s.charCodeAt(i)&255;return u}
+function wrapText(s,bold,size,maxW){
+  var out=[];
+  String(s==null?'':s).split('\n').forEach(function(par){
+    var line='';
+    par.split(' ').forEach(function(w){
+      var t=line?line+' '+w:w;
+      if(strW(t,bold,size)<=maxW){line=t;return}
+      if(line){out.push(line);line=''}
+      while(strW(w,bold,size)>maxW&&w.length>1){var k=1;while(k<w.length-1&&strW(w.slice(0,k+1),bold,size)<=maxW)k++;out.push(w.slice(0,k));w=w.slice(k)}
+      line=w;
+    });
+    out.push(line);
+  });
+  return out;
+}
+function PdfDoc(o){
+  this.land=!!o.landscape;this.W=this.land?841.89:595.28;this.H=this.land?595.28:841.89;
+  this.m=36;this.top=70;this.bot=44;this.title=o.title||'';this.pages=[];this.imgs=[];
+  this.stamp=fmt(todayStr());this.newPage();
+}
+var PP=PdfDoc.prototype;
+PP.n=function(v){return String(Math.round(v*100)/100)};
+PP.text=function(x,y,s,bold,size,col){col=col||[0,0,0];this.cur.push('BT /F'+(bold?2:1)+' '+size+' Tf '+this.n(col[0])+' '+this.n(col[1])+' '+this.n(col[2])+' rg '+this.n(x)+' '+this.n(this.H-y-size*0.85)+' Td '+pdfStr(s)+' Tj ET')};
+PP.line=function(x1,y1,x2,y2,w,g){this.cur.push(this.n(g)+' G '+this.n(w)+' w '+this.n(x1)+' '+this.n(this.H-y1)+' m '+this.n(x2)+' '+this.n(this.H-y2)+' l S')};
+PP.rect=function(x,y,w,h,c){this.cur.push(this.n(c[0])+' '+this.n(c[1])+' '+this.n(c[2])+' rg '+this.n(x)+' '+this.n(this.H-y-h)+' '+this.n(w)+' '+this.n(h)+' re f')};
+PP.newPage=function(){
+  this.cur=[];this.curImgs={};this.pages.push({ops:this.cur,imgs:this.curImgs});
+  this.text(this.m,22,this.title,true,12,[.1,.15,.25]);
+  if(S.settings.einrichtung)this.text(this.m,38,S.settings.einrichtung,false,9,[.4,.4,.45]);
+  var r='Stand: '+this.stamp;this.text(this.W-this.m-strW(r,false,9),24,r,false,9,[.4,.4,.45]);
+  this.line(this.m,56,this.W-this.m,56,0.8,.6);
+  this.y=this.top;
+};
+PP.room=function(h){if(this.y+h>this.H-this.bot){this.newPage();return true}return false};
+PP.gap=function(h){this.y+=h};
+PP.rule=function(){this.line(this.m,this.y,this.W-this.m,this.y,0.4,.8)};
+PP.para=function(s,o){
+  o=o||{};var size=o.size||10,lh=size*1.32,ind=o.indent||0,self=this;
+  wrapText(s,!!o.bold,size,this.W-2*this.m-ind).forEach(function(l){self.room(lh);self.text(self.m+ind,self.y,l,!!o.bold,size,o.col);self.y+=lh});
+  if(o.gap)this.y+=o.gap;
+};
+PP.h2=function(s){this.room(44);this.para(s,{bold:true,size:13,gap:4})};
+PP.kv=function(rows,keyW){
+  keyW=keyW||120;var self=this,size=9.5,lh=size*1.32,vw=this.W-2*this.m-keyW;
+  rows.forEach(function(r){
+    if(r[1]==null||r[1]==='')return;
+    var lines=wrapText(String(r[1]),false,size,vw);
+    self.room(lh);self.text(self.m,self.y,r[0],false,size,[.4,.4,.45]);
+    lines.forEach(function(l,i){if(i>0)self.room(lh);self.text(self.m+keyW,self.y,l,false,size);self.y+=lh});
+  });
+};
+PP.table=function(cols,head,rows,o){
+  o=o||{};var self=this,fs=o.size||8,lh=fs*1.3,pd=3,x0=this.m,tw=cols.reduce(function(a,b){return a+b},0);
+  function drawHead(){var h=lh+2*pd;self.room(h+2*lh+2*pd);self.rect(x0,self.y,tw,h,[.9,.92,.95]);var x=x0;head.forEach(function(t,i){self.text(x+pd,self.y+pd,t,true,fs);x+=cols[i]});self.y+=h}
+  function norm(c,w){var parts=Array.isArray(c)?c:[c],out=[];parts.forEach(function(p){if(p==null||p==='')return;if(typeof p!=='object')p={t:String(p)};wrapText(p.t,!!p.bold,fs,w-2*pd).forEach(function(l){out.push({s:l,bold:!!p.bold,col:p.col})})});return out}
+  drawHead();
+  rows.forEach(function(r){
+    var cells=r.map(function(c,i){return norm(c,cols[i])}),n=Math.max.apply(null,cells.map(function(c){return c.length}));if(!n)n=1;
+    var h=n*lh+2*pd;
+    if(self.y+h>self.H-self.bot){self.newPage();drawHead()}
+    var x=x0;cells.forEach(function(c,i){c.forEach(function(l,k){self.text(x+pd,self.y+pd+k*lh,l.s,l.bold,fs,l.col)});x+=cols[i]});
+    self.y+=h;self.line(x0,self.y,x0+tw,self.y,0.3,.85);
+  });
+};
+PP.image=function(img,maxW,maxH){
+  var s=Math.min(maxW/img.w,maxH/img.h),w=img.w*s,h=img.h*s;
+  this.room(h+8);var idx=this.imgs.push(img)-1;this.curImgs[idx]=1;
+  this.cur.push('q '+this.n(w)+' 0 0 '+this.n(h)+' '+this.n(this.m)+' '+this.n(this.H-this.y-h)+' cm /Im'+idx+' Do Q');
+  this.y+=h+4;
+};
+PP.build=function(){
+  var n=this.pages.length,chunks=[],pos=0,offs=[],nImg=this.imgs.length,i;
+  var ft=(S.settings.ersteller?'Erstellt von '+S.settings.ersteller+' · ':'')+'Geräteverwaltung STK/MTK';
+  for(i=0;i<n;i++){
+    this.cur=this.pages[i].ops;
+    this.cur.push('0.8 G 0.5 w '+this.n(this.m)+' '+this.n(this.bot-6)+' m '+this.n(this.W-this.m)+' '+this.n(this.bot-6)+' l S');
+    this.text(this.m,this.H-this.bot+10,ft,false,8,[.45,.45,.5]);
+    var pg='Seite '+(i+1)+' von '+n;this.text(this.W-this.m-strW(pg,false,8),this.H-this.bot+10,pg,false,8,[.45,.45,.5]);
+  }
+  function put(x){var b=typeof x==='string'?enc(x):x;chunks.push(b);pos+=b.length}
+  function obj(num,parts){offs[num]=pos;put(num+' 0 obj\n');parts.forEach(put);put('\nendobj\n')}
+  put(new Uint8Array([0x25,0x50,0x44,0x46,0x2d,0x31,0x2e,0x34,0x0a,0x25,0xe2,0xe3,0xcf,0xd3,0x0a]));
+  var base=6+nImg,kids=[];for(i=0;i<n;i++)kids.push((base+2*i+1)+' 0 R');
+  obj(1,['<</Type/Catalog/Pages 2 0 R>>']);
+  obj(2,['<</Type/Pages/Count '+n+'/Kids['+kids.join(' ')+']>>']);
+  obj(3,['<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>']);
+  obj(4,['<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>']);
+  var d=new Date(),cd='D:'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds());
+  obj(5,['<</Title '+pdfStr(this.title)+'/Producer (Geraeteverwaltung STK/MTK)/CreationDate ('+cd+')>>']);
+  this.imgs.forEach(function(im,k){obj(6+k,['<</Type/XObject/Subtype/Image/Width '+im.w+'/Height '+im.h+'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length '+im.bytes.length+'>>\nstream\n',im.bytes,'\nendstream'])});
+  for(i=0;i<n;i++){
+    var c=this.pages[i].ops.join('\n'),cn=base+2*i,pn=cn+1;
+    var xo=Object.keys(this.pages[i].imgs).map(function(k){return '/Im'+k+' '+(6+ +k)+' 0 R'}).join(' ');
+    obj(cn,['<</Length '+c.length+'>>\nstream\n',c,'\nendstream']);
+    obj(pn,['<</Type/Page/Parent 2 0 R/MediaBox[0 0 '+this.n(this.W)+' '+this.n(this.H)+']/Resources<</Font<</F1 3 0 R/F2 4 0 R>>'+(xo?'/XObject<<'+xo+'>>':'')+'>>/Contents '+cn+' 0 R>>']);
+  }
+  var N=base+2*n,xr=pos,x='xref\n0 '+N+'\n0000000000 65535 f \n';
+  for(i=1;i<N;i++)x+=('0000000000'+offs[i]).slice(-10)+' 00000 n \n';
+  x+='trailer\n<</Size '+N+'/Root 1 0 R/Info 5 0 R>>\nstartxref\n'+xr+'\n%%EOF\n';put(x);
+  var out=new Uint8Array(pos),o=0;chunks.forEach(function(b){out.set(b,o);o+=b.length});return out;
+};
 
-/* ---------- Sicherung, Wiederherstellung, Kalender ---------- */
+/* ---------- Berichte ---------- */
+var RED=[.71,.14,.09],AMB=[.58,.34,.04],GRN=[.03,.46,.28],GRY=[.4,.4,.45];
+function byName(a,b){return String(a.name).localeCompare(String(b.name),'de')}
+function pdfDevStatus(dv){
+  if(dv.status==='gesperrt')return {t:'Gesperrt',bold:true,col:RED};
+  if(dv.status==='ausgesondert')return {t:'Ausgesondert',col:GRY};
+  var s=devStatus(dv);return {t:PILL[s],bold:s==='ueber',col:s==='ueber'?RED:(s==='bald'?AMB:(s==='ok'?GRN:GRY))};
+}
+function lastCell(dv,a){return (a==='mtk'&&!dv.mtkPflicht)?'–':fmt(dv[a+'Last'])}
+function nextCell(dv,a){
+  if(a==='mtk'&&!dv.mtkPflicht)return '–';
+  var c=chk(dv,a);return {t:fmt(dv[a+'Next']),bold:c.s==='ueber'&&dv.status==='aktiv',col:dv.status!=='aktiv'?null:(c.s==='ueber'?RED:(c.s==='bald'?AMB:null))};
+}
+function buildBest(o){
+  var list=S.devices.filter(function(d){return o.aus||d.status!=='ausgesondert'}).sort(byName);
+  var doc=new PdfDoc({landscape:true,title:'Bestandsverzeichnis Medizinprodukte'});
+  var c={ueber:0,bald:0,offen:0};list.forEach(function(d){var s=devStatus(d);if(c[s]!=null)c[s]++});
+  doc.para(list.length+' Gerät'+(list.length===1?'':'e')+' · '+c.ueber+' überfällig · '+c.bald+' bald fällig (innerhalb von '+S.settings.warnDays+' Tagen) · '+c.offen+' ohne erfassten Stand',{size:9.5,gap:6});
+  doc.table([165,95,105,85,56,56,56,56,95],['Gerät / Typ','Hersteller','Seriennr. / Inv.-Nr.','Standort','STK zuletzt','STK fällig','MTK zuletzt','MTK fällig','Status'],
+    list.map(function(d){return [[{t:d.name,bold:true},d.typ||''],d.hersteller||'',[d.seriennr?'SN '+d.seriennr:'',d.inventarnr?'Inv. '+d.inventarnr:''],d.ort||'',lastCell(d,'stk'),nextCell(d,'stk'),lastCell(d,'mtk'),nextCell(d,'mtk'),pdfDevStatus(d)]}));
+  if(!list.length)doc.para('Keine Geräte erfasst.',{size:10});
+  return doc.build();
+}
+async function pdfInsp(doc,i,o){
+  doc.room(72);
+  var col=i.ergebnis==='bestanden'?GRN:(i.ergebnis==='nicht bestanden'?RED:AMB);
+  doc.para(fmt(i.datum)+'  ·  '+String(i.art||'').toUpperCase()+'  ·  '+i.ergebnis,{bold:true,size:10.5,col:col});
+  if(o.withDev)doc.para(i.deviceName+(i.inventarnr?' (Inv.-Nr. '+i.inventarnr+')':'')+(i.seriennr?' · SN '+i.seriennr:''),{bold:true,size:9.5});
+  doc.para('Prüfer: '+i.pruefer+(i.protokollNr?'   ·   Protokoll-/Plakettennr.: '+i.protokollNr:'')+(i.naechste?'   ·   Nächste Prüfung: '+fmt(i.naechste):''),{size:9});
+  if(i.bemerkung)doc.para('Bemerkung: '+i.bemerkung,{size:9});
+  var ph=S.photos.filter(function(p){return p.inspId===i.id}).sort(function(a,b){return (a.createdAt||0)-(b.createdAt||0)});
+  if(o.fotos){
+    for(var k=0;k<ph.length;k++){
+      var data=await getPhotoData(ph[k].id);if(!data)continue;
+      doc.image({w:ph[k].w,h:ph[k].h,bytes:new Uint8Array(data)},doc.W-2*doc.m,520);
+      doc.para('Foto '+(k+1)+' von '+ph.length,{size:7.5,col:GRY});
+    }
+  }else if(ph.length)doc.para(ph.length+' Foto'+(ph.length===1?'':'s')+' vorhanden (nicht im Bericht enthalten)',{size:8,col:GRY});
+  doc.gap(6);doc.rule();doc.gap(8);
+}
+function sortInsp(a,b){return String(b.datum).localeCompare(String(a.datum))||(b.createdAt||0)-(a.createdAt||0)}
+async function buildProt(o){
+  var list=S.inspections.filter(function(i){return (!o.von||i.datum>=o.von)&&(!o.bis||i.datum<=o.bis)&&(!o.deviceId||i.deviceId===o.deviceId)}).sort(sortInsp);
+  var doc=new PdfDoc({title:'Prüfprotokoll Medizinprodukte'}),dev=o.deviceId&&getDev(o.deviceId);
+  doc.para('Zeitraum: '+(o.von?fmt(o.von):'Beginn')+' bis '+(o.bis?fmt(o.bis):'heute')+(dev?' · Gerät: '+dev.name:'')+' · '+list.length+' Prüfung'+(list.length===1?'':'en'),{size:9.5,gap:8});
+  if(!list.length)doc.para('Keine Prüfungen im gewählten Zeitraum.',{size:10});
+  for(var k=0;k<list.length;k++)await pdfInsp(doc,list[k],{withDev:!dev,fotos:o.fotos});
+  return doc.build();
+}
+async function buildDossier(id){
+  var dv=getDev(id),doc=new PdfDoc({title:'Gerätedossier'});
+  doc.para(dv.name,{bold:true,size:16,gap:4});
+  doc.kv([['Hersteller',dv.hersteller],['Typ / Modell',dv.typ],['Seriennummer',dv.seriennr],['Inventarnummer',dv.inventarnr],['Standort',dv.ort],['Anschaffungsjahr',dv.baujahr],['Betriebsstatus',statusName(dv.status)]]);
+  doc.gap(6);doc.h2('Prüffristen');
+  ['stk','mtk'].forEach(function(a){
+    doc.kv([[a.toUpperCase(),(a==='mtk'&&!dv.mtkPflicht)?'nicht vorgesehen':'letzte Prüfung '+fmt(dv[a+'Last'])+' · nächste '+fmt(dv[a+'Next'])+' · Intervall '+(dv[a+'Int']||24)+' Monate · '+chkLabel(chk(dv,a))]]);
+  });
+  if(dv.bemerkung)doc.kv([['Bemerkung',dv.bemerkung]]);
+  doc.gap(8);doc.h2('Prüfhistorie');
+  var list=S.inspections.filter(function(i){return i.deviceId===id}).sort(sortInsp);
+  if(!list.length)doc.para('Noch keine Prüfung dokumentiert.',{size:10});
+  for(var k=0;k<list.length;k++)await pdfInsp(doc,list[k],{withDev:false,fotos:true});
+  return doc.build();
+}
+function safeName(s){return String(s).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,40)||'Geraet'}
+async function runExport(form){
+  var f=new FormData(form),g=function(k){return String(f.get(k)||'')},kind=form.dataset.kind;
+  S.modal={type:'work',text:'PDF wird erstellt …'};renderModal();
+  try{
+    var bytes,name;
+    if(kind==='best'){bytes=buildBest({aus:f.get('aus')==='on'});name='Bestandsverzeichnis_'+todayStr()+'.pdf'}
+    else{var von=g('von'),bis=g('bis');bytes=await buildProt({von:parseD(von)?von:'',bis:parseD(bis)?bis:'',deviceId:g('dev'),fotos:f.get('fotos')==='on'});name='Pruefprotokoll_'+todayStr()+'.pdf'}
+    offerFile(name,new Blob([bytes],{type:'application/pdf'}),'application/pdf','pdf');
+  }catch(e){S.modal=null;renderModal();toast('PDF konnte nicht erstellt werden')}
+}
+async function runDossier(id){
+  var dv=getDev(id);if(!dv)return;
+  S.modal={type:'work',text:'PDF wird erstellt …'};renderModal();
+  try{var bytes=await buildDossier(id);offerFile('Geraetedossier_'+safeName(dv.name)+'_'+todayStr()+'.pdf',new Blob([bytes],{type:'application/pdf'}),'application/pdf','pdf')}
+  catch(e){S.modal=null;renderModal();toast('PDF konnte nicht erstellt werden')}
+}
+function exportForm(m){
+  var btn='<div class="row" style="margin-top:16px"><button class="pri" type="submit">PDF erstellen</button><button type="button" data-act="close">Abbrechen</button></div></form>';
+  if(m.kind==='best')return '<h2>Bestandsverzeichnis (PDF)</h2><div class="mut small">Alle Geräte mit Fristen und Status, quer im A4-Format.</div><form id="expform" data-kind="best"><label class="chk"><input type="checkbox" name="aus"> Ausgesonderte Geräte einschließen</label>'+btn;
+  var opts='<option value="">Alle Geräte</option>'+S.devices.slice().sort(byName).map(function(d){return '<option value="'+esc(d.id)+'">'+esc(d.name)+(d.inventarnr?' ('+esc(d.inventarnr)+')':'')+'</option>'}).join('');
+  return '<h2>Prüfprotokolle (PDF)</h2><div class="mut small">Alle dokumentierten Prüfungen, neueste zuerst.</div><form id="expform" data-kind="prot"><div class="g2"><div><label>Von (optional)</label><input type="date" name="von"></div><div><label>Bis (optional)</label><input type="date" name="bis"></div></div><label>Gerät</label><select name="dev">'+opts+'</select><label class="chk"><input type="checkbox" name="fotos" checked> Fotos in den Bericht einbetten</label><div class="small mut">Jedes Foto vergrößert die Datei um etwa 0,3 MB.</div>'+btn;
+}
+
+/* ---------- Datei bereitstellen (Teilen-Dialog) ---------- */
+function offerFile(name,blob,type,kind){S.file={name:name,blob:blob,type:type,kind:kind};S.modal={type:'file'};renderModal()}
+function fileHtml(){
+  var f=S.file;if(!f)return '';
+  var kb=Math.max(1,Math.round(f.blob.size/1024));
+  return '<h2>Datei ist fertig</h2><p><b>'+esc(f.name)+'</b><br><span class="mut small">'+(kb>1024?(kb/1024).toFixed(1)+' MB':kb+' KB')+'</span></p><p class="small mut">„Teilen / Senden“ öffnet das iPhone-Menü: dort Mail wählen oder „In Dateien sichern“.</p><div class="row"><button class="pri" data-act="file-share">Teilen / Senden</button><button data-act="file-save">Speichern</button><button data-act="file-close">Schließen</button></div>';
+}
+async function fileDone(){var f=S.file;if(f&&f.kind==='backup'){try{await saveDoc('settings','main',Object.assign({},S.settings,{lastBackup:todayStr()}))}catch(e){}}}
+async function shareFile(){
+  var f=S.file;if(!f)return;
+  try{
+    var file=new File([f.blob],f.name,{type:f.type});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:f.name});await fileDone();toast('Fertig');return}
+  }catch(e){if(e&&e.name==='AbortError')return}
+  saveFileLocal();
+}
+function saveFileLocal(){
+  var f=S.file;if(!f)return;
+  try{var a=document.createElement('a');a.href=URL.createObjectURL(f.blob);a.download=f.name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},4000);fileDone();toast('Datei wird gespeichert …')}
+  catch(e){toast('Speichern fehlgeschlagen')}
+}
+
+/* ---------- Fotos ---------- */
+var volData={};
+function readBuf(blob){return blob.arrayBuffer?blob.arrayBuffer():new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result)};r.onerror=function(){rej(r.error)};r.readAsArrayBuffer(blob)})}
+function loadImg(file){return new Promise(function(res,rej){var u=URL.createObjectURL(file),i=new Image();i.onload=function(){URL.revokeObjectURL(u);res(i)};i.onerror=function(){URL.revokeObjectURL(u);rej(new Error('img'))};i.src=u})}
+async function processPhoto(file){
+  var img=await loadImg(file),w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+  if(!w||!h)throw new Error('size');
+  var sc=Math.min(1,1600/Math.max(w,h)),cw=Math.max(1,Math.round(w*sc)),ch=Math.max(1,Math.round(h*sc));
+  var c=document.createElement('canvas');c.width=cw;c.height=ch;var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cw,ch);x.drawImage(img,0,0,cw,ch);
+  var blob=await new Promise(function(r){c.toBlob(r,'image/jpeg',0.75)});if(!blob)throw new Error('jpeg');
+  var buf=await readBuf(blob);
+  var ts=Math.min(1,200/Math.max(cw,ch)),tc=document.createElement('canvas');tc.width=Math.max(1,Math.round(cw*ts));tc.height=Math.max(1,Math.round(ch*ts));tc.getContext('2d').drawImage(c,0,0,tc.width,tc.height);
+  var thumb=tc.toDataURL('image/jpeg',0.6);c.width=c.height=0;tc.width=tc.height=0;
+  return {name:String(file.name||'Foto').slice(0,80),w:cw,h:ch,data:buf,size:buf.byteLength,thumb:thumb};
+}
+async function storePhoto(id,buf,meta,quiet){
+  if(IDBH)await idbReq('photoData','readwrite',function(s){return s.put({id:id,data:buf})});else volData[id]=buf;
+  await saveDoc('photos',id,meta,quiet);
+}
+function savePhoto(p,inspId,deviceId){return storePhoto(uid(),p.data,{inspId:inspId,deviceId:deviceId,name:p.name,w:p.w,h:p.h,size:p.size,thumb:p.thumb,createdAt:Date.now()},false)}
+function getPhotoData(id){
+  if(!IDBH)return Promise.resolve(volData[id]||null);
+  return idbReq('photoData','readonly',function(s){return s.get(id)}).then(function(r){return r?r.data:null});
+}
+async function delPhoto(id){if(IDBH)await idbReq('photoData','readwrite',function(s){return s.delete(id)});else delete volData[id];await delDoc('photos',id)}
+function photoRow(inspId){
+  var ph=S.photos.filter(function(p){return p.inspId===inspId&&/^data:image\/jpeg;base64,/.test(String(p.thumb||''))}).sort(function(a,b){return (a.createdAt||0)-(b.createdAt||0)});
+  return '<div class="thumbs">'+ph.map(function(p){return '<img class="th" alt="Foto" src="'+esc(p.thumb)+'" data-act="photo" data-id="'+esc(p.id)+'">'}).join('')+'<button class="sm" data-act="addphoto" data-id="'+esc(inspId)+'">+ Foto</button></div>';
+}
+function renderPending(){
+  var el=$('#pph');if(!el)return;
+  el.innerHTML=S.pending.map(function(p,i){return '<span class="pp"><img class="th" alt="" src="'+p.thumb+'"><button type="button" class="x" data-act="pp-del" data-i="'+i+'" aria-label="Entfernen">×</button></span>'}).join('')+(S.busy?'<span class="mut small">Verarbeite …</span>':'');
+}
+async function addPending(input){
+  var files=Array.prototype.slice.call(input.files||[]);input.value='';
+  for(var k=0;k<files.length;k++){
+    if(S.pending.length>=12){toast('Maximal 12 Fotos pro Prüfung');break}
+    S.busy++;renderPending();
+    try{S.pending.push(await processPhoto(files[k]))}catch(e){toast('Ein Foto konnte nicht gelesen werden')}
+    S.busy--;renderPending();
+  }
+}
+async function addToInsp(input){
+  var files=Array.prototype.slice.call(input.files||[]),iid=S.addTo;input.value='';
+  var insp=S.inspections.find(function(x){return x.id===iid});if(!insp||!files.length)return;
+  toast('Fotos werden gespeichert …');var n=0;
+  for(var k=0;k<files.length;k++){try{await savePhoto(await processPhoto(files[k]),iid,insp.deviceId);n++}catch(e){}}
+  toast(n?n+' Foto'+(n===1?'':'s')+' angehängt':'Foto konnte nicht gespeichert werden');
+}
+var bigUrl='';
+function releaseBig(){if(bigUrl){try{URL.revokeObjectURL(bigUrl)}catch(e){}bigUrl=''}}
+function loadBig(id){
+  getPhotoData(id).then(function(d){
+    if(!d||!S.modal||S.modal.type!=='photo'||S.modal.id!==id)return;
+    releaseBig();bigUrl=URL.createObjectURL(new Blob([d],{type:'image/jpeg'}));var im=$('#bigphoto');if(im)im.src=bigUrl;
+  }).catch(function(){toast('Foto konnte nicht geladen werden')});
+}
+function photoModalHtml(m){
+  return '<div class="row sp"><h2>Foto</h2><button class="sm" data-act="photo-close">Zurück</button></div><img id="bigphoto" class="photo" alt="Foto"><div class="row" style="margin-top:10px"><button class="sm dng" data-act="photo-del" data-id="'+esc(m.id)+'">Foto löschen</button></div>';
+}
+function saveSetting(k,v){return saveDoc('settings','main',Object.assign({},S.settings,(function(o){o[k]=String(v).slice(0,120);return o})({}))).catch(function(){toast('Speichern fehlgeschlagen')})}
+
+/* ---------- Sicherung ---------- */
+function b64(buf){var u=new Uint8Array(buf),s='',CH=0x8000;for(var i=0;i<u.length;i+=CH)s+=String.fromCharCode.apply(null,u.subarray(i,i+CH));return btoa(s)}
+function unb64(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer}
 async function expJson(){
-  var ok=await dl('geraeteverwaltung_sicherung_'+todayStr()+'.json',JSON.stringify({exportiert:new Date().toISOString(),geraete:S.devices,pruefungen:S.inspections},null,1));
-  if(ok){try{await saveDoc('settings','main',Object.assign({},S.settings,{lastBackup:todayStr()}))}catch(e){}}
+  S.modal={type:'work',text:'Sicherung wird erstellt …'};renderModal();
+  try{
+    var parts=['{"exportiert":'+JSON.stringify(new Date().toISOString())+',"version":2,"einstellungen":'+JSON.stringify(S.settings)+',"geraete":'+JSON.stringify(S.devices)+',"pruefungen":'+JSON.stringify(S.inspections)+',"fotos":['],first=true;
+    for(var k=0;k<S.photos.length;k++){var p=S.photos[k],d=await getPhotoData(p.id);if(!d)continue;parts.push((first?'':',')+JSON.stringify(Object.assign({},p,{data:b64(d)})));first=false}
+    parts.push(']}');
+    offerFile('geraeteverwaltung_sicherung_'+todayStr()+'.json',new Blob(parts,{type:'application/json'}),'application/json','backup');
+  }catch(e){S.modal=null;renderModal();toast('Sicherung fehlgeschlagen')}
 }
 async function restoreBackup(text){
   var j;try{j=JSON.parse(text)}catch(e){toast('Datei ist keine gültige Sicherung');return}
-  var dv=Array.isArray(j.geraete)?j.geraete:[],ins=Array.isArray(j.pruefungen)?j.pruefungen:[];
-  if(!dv.length&&!ins.length){toast('Keine Daten in der Sicherung gefunden');return}
-  var okid=/^[A-Za-z0-9_.:@+~-]{1,100}$/,nd=0,ni=0;
+  var dv=Array.isArray(j.geraete)?j.geraete:[],ins=Array.isArray(j.pruefungen)?j.pruefungen:[],fo=Array.isArray(j.fotos)?j.fotos:[];
+  if(!dv.length&&!ins.length&&!fo.length){toast('Keine Daten in der Sicherung gefunden');return}
+  var okid=/^[A-Za-z0-9_.:@+~-]{1,100}$/,nd=0,ni=0,nf=0;
   try{
-    for(var x of dv){if(!x||typeof x!=='object'||!x.name)continue;var r=Object.assign({},x);var id=okid.test(String(x.id||''))?x.id:uid();delete r.id;await saveDoc('devices',id,r,true);nd++}
-    for(var y of ins){if(!y||typeof y!=='object'||!y.deviceId||!parseD(y.datum))continue;var q=Object.assign({},y);var iid=okid.test(String(y.id||''))?y.id:uid();delete q.id;await saveDoc('inspections',iid,q,true);ni++}
-    render();toast(nd+' Geräte und '+ni+' Prüfungen wiederhergestellt');
+    for(var k=0;k<dv.length;k++){var x=dv[k];if(!x||typeof x!=='object'||!x.name)continue;var r=Object.assign({},x),id=okid.test(String(x.id||''))?x.id:uid();delete r.id;await saveDoc('devices',id,r,true);nd++}
+    for(k=0;k<ins.length;k++){var y=ins[k];if(!y||typeof y!=='object'||!y.deviceId||!parseD(y.datum))continue;var q=Object.assign({},y),iid=okid.test(String(y.id||''))?y.id:uid();delete q.id;await saveDoc('inspections',iid,q,true);ni++}
+    for(k=0;k<fo.length;k++){
+      var z=fo[k];
+      if(!z||typeof z!=='object'||!okid.test(String(z.id||''))||!okid.test(String(z.inspId||''))||typeof z.data!=='string')continue;
+      if(!/^data:image\/jpeg;base64,/.test(String(z.thumb||''))||!(z.w>0)||!(z.h>0))continue;
+      var buf=unb64(z.data);
+      await storePhoto(z.id,buf,{inspId:z.inspId,deviceId:String(z.deviceId||''),name:String(z.name||'Foto').slice(0,80),w:Math.round(z.w),h:Math.round(z.h),size:buf.byteLength,thumb:z.thumb,createdAt:+z.createdAt||Date.now()},true);nf++;
+    }
+    var es=j.einstellungen;
+    if(es&&typeof es==='object'){var st=Object.assign({},S.settings);if(+es.warnDays>0)st.warnDays=Math.min(365,Math.round(+es.warnDays));['einrichtung','ersteller'].forEach(function(key){if(typeof es[key]==='string')st[key]=es[key].slice(0,120)});await saveDoc('settings','main',st,true)}
+    render();toast(nd+' Geräte, '+ni+' Prüfungen, '+nf+' Fotos wiederhergestellt');
   }catch(e){render();toast('Wiederherstellung nach '+nd+' Geräten abgebrochen')}
 }
+
+/* ---------- Lokale Datenbank (IndexedDB) ---------- */
+function idbOpen(){return new Promise(function(res,rej){var r=indexedDB.open('geraeteverwaltung',2);r.onupgradeneeded=function(){var d=r.result;['devices','inspections','settings','photos','photoData'].forEach(function(n){if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};r.onsuccess=function(){var d=r.result;d.onversionchange=function(){d.close()};res(d)};r.onerror=function(){rej(r.error)};r.onblocked=function(){toast('Bitte die App in anderen Fenstern oder Tabs schließen.')}})}
+function idbReq(store,mode,fn){return new Promise(function(res,rej){var tx=IDBH.transaction(store,mode),rq=fn(tx.objectStore(store));tx.oncomplete=function(){res(rq&&rq.result)};tx.onerror=tx.onabort=function(){rej(tx.error)}})}
+
+/* ---------- Sicherung, Wiederherstellung, Kalender ---------- */
 function icsEsc(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n')}
 function icsFold(l){var o=[];while(l.length>70){o.push(l.slice(0,70));l=' '+l.slice(70)}o.push(l);return o.join('\r\n')}
 function buildIcs(){
@@ -548,10 +879,11 @@ function expIcs(){var s=buildIcs();if(!s){toast('Keine anstehenden Fristen mit D
 /* ---------- Start ---------- */
 async function init(){
   render();
+  var STORES=['devices','inspections','settings','photos'];
   try{
     IDBH=await idbOpen();
-    var all=await Promise.all(['devices','inspections','settings'].map(function(c){return idbReq(c,'readonly',function(s){return s.getAll()})}));
-    ['devices','inspections','settings'].forEach(function(c,i){all[i].forEach(function(r){var id=r.id;delete r.id;mem[c][id]=r})});
+    var all=await Promise.all(STORES.map(function(c){return idbReq(c,'readonly',function(s){return s.getAll()})}));
+    STORES.forEach(function(c,i){all[i].forEach(function(r){var id=r.id;delete r.id;mem[c][id]=r})});
     S.store='local';
   }catch(e){IDBH=null;S.store='volatile'}
   S.loaded.d=S.loaded.i=true;syncMem();render();
