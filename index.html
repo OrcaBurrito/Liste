@@ -236,7 +236,7 @@ function statusName(s){return {aktiv:'in Betrieb',gesperrt:'gesperrt / außer Be
 
 function viewProtokoll(){
   var list=S.inspections.slice().sort(function(a,b){return String(b.datum).localeCompare(String(a.datum))||(b.createdAt||0)-(a.createdAt||0)});
-  var h='<div class="row sp"><h3 style="margin:0">Prüfprotokoll</h3>'+(list.length?'<button class="sm" data-act="exp-open" data-kind="prot">PDF</button>':'')+'</div><p class="mut small">Chronologische Dokumentation aller durchgeführten Prüfungen. Einträge sind bewusst nicht löschbar.</p>';
+  var h='<div class="row sp"><h3 style="margin:0">Prüfprotokoll</h3>'+(list.length?'<button class="sm" data-act="exp-open" data-kind="prot">PDF</button>':'')+'</div><p class="mut small">Chronologische Dokumentation aller durchgeführten Prüfungen. Ein Eintrag lässt sich nur mit doppelter Sicherheitsabfrage löschen.</p>';
   if(!list.length)return h+'<div class="empty">Noch keine Prüfung dokumentiert.</div>';
   list.slice(0,300).forEach(function(i){h+='<div class="card">'+inspRow(i,true)+'</div>'});
   if(list.length>300)h+='<div class="mut small">Es werden die letzten 300 Einträge angezeigt. Der CSV-Export enthält alle.</div>';
@@ -247,7 +247,7 @@ function inspRow(i,withDev){
   return '<div class="row sp"><b>'+esc(fmt(i.datum))+' · '+esc((i.art||'').toUpperCase())+'</b><span class="pill '+ergClass(i.ergebnis)+'">'+esc(i.ergebnis)+'</span></div>'
    +(withDev?'<div>'+esc(i.deviceName)+(i.inventarnr?' <span class="mut">· Inv. '+esc(i.inventarnr)+'</span>':'')+'</div>':'')
    +'<div class="mut small">Prüfer: '+esc(i.pruefer)+(i.protokollNr?' · Nr. '+esc(i.protokollNr):'')+(i.naechste?' · nächste: '+esc(fmt(i.naechste)):'')+'</div>'
-   +(i.bemerkung?'<div class="small" style="margin-top:3px">'+esc(i.bemerkung)+'</div>':'')+photoRow(i.id);
+   +(i.bemerkung?'<div class="small" style="margin-top:3px">'+esc(i.bemerkung)+'</div>':'')+photoRow(i.id)+'<div class="row" style="margin-top:8px"><button class="sm dng" data-act="insp-del" data-id="'+esc(i.id)+'">Eintrag löschen</button></div>';
 }
 
 function viewMehr(){
@@ -290,6 +290,7 @@ function modalHtml(){
   if(m.type==='export')return exportForm(m);
   if(m.type==='work')return '<h2>'+esc(m.text)+'</h2><p class="mut small">Bitte einen Moment warten.</p>';
   if(m.type==='file')return fileHtml();
+  if(m.type==='confirm2')return '<h2>Letzte Sicherheitsabfrage</h2><p>Der Eintrag und seine Fotos werden <b>endgültig</b> gelöscht. Das kann nicht rückgängig gemacht werden.</p><label>Zur Bestätigung LÖSCHEN eintippen</label><input id="delword" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false"><div class="row" style="margin-top:14px"><button class="dng" data-act="insp-delok" data-id="'+esc(m.id)+'">Endgültig löschen</button><button data-act="close">Abbrechen</button></div>';
   if(m.type==='confirm')return '<h2>'+esc(m.title)+'</h2><p>'+esc(m.text)+'</p><div class="row" style="margin-top:14px"><button class="dng" data-act="'+m.act+'" data-id="'+esc(m.id||'')+'">'+esc(m.ok)+'</button><button data-act="close">Abbrechen</button></div>';
   return '';
 }
@@ -490,6 +491,9 @@ document.addEventListener('click',async function(e){
   else if(a==='photo-close'){releaseBig();S.modal=S.modal.back||null;renderModal()}
   else if(a==='photo-del'){S.modal={type:'confirm',title:'Foto löschen?',text:'Das Foto wird von dieser Prüfung entfernt. Der Prüfeintrag bleibt erhalten.',ok:'Foto löschen',act:'photo-delok',id:id,back:S.modal.back};renderModal()}
   else if(a==='photo-delok'){var bk=S.modal&&S.modal.back;try{await delPhoto(id);releaseBig();S.modal=bk||null;renderModal();toast('Foto gelöscht')}catch(x){toast('Löschen fehlgeschlagen')}}
+  else if(a==='insp-del'){var ii=S.inspections.find(function(x){return x.id===id});if(!ii)return;S.modal={type:'confirm',title:'Prüfeintrag löschen?',text:'Eintrag vom '+fmt(ii.datum)+' ('+String(ii.art||'').toUpperCase()+', '+ii.deviceName+') wird mit allen zugehörigen Fotos entfernt. Die Prüftermine des Geräts bleiben unverändert und müssen bei Bedarf im Gerät angepasst werden. Tipp: vorher eine Komplettsicherung erstellen.',ok:'Weiter',act:'insp-del2',id:id,back:S.modal};renderModal()}
+  else if(a==='insp-del2'){S.modal={type:'confirm2',id:id,back:S.modal&&S.modal.back};renderModal()}
+  else if(a==='insp-delok'){var w=String(($('#delword')||{}).value||'').trim().toUpperCase();if(w!=='LÖSCHEN'&&w!=='LOESCHEN'){toast('Bitte LÖSCHEN eintippen');return}var bk2=S.modal&&S.modal.back;try{var ps=S.photos.filter(function(p){return p.inspId===id});for(var pi of ps)await delPhoto(pi.id);await delDoc('inspections',id);S.modal=bk2||null;renderModal();render();toast('Eintrag gelöscht')}catch(x){toast('Löschen fehlgeschlagen')}}
   else if(a==='addphoto'){S.addTo=id;$('#photoadd').click()}
   else if(a==='pp-del'){S.pending.splice(+el.dataset.i,1);renderPending()}
   else if(a==='file-share')shareFile();
@@ -531,7 +535,7 @@ document.addEventListener('change',function(e){
 });
 
 /* ---------- PDF-Erzeugung (ohne Bibliothek) ---------- */
-var APP_VERSION='2.1';
+var APP_VERSION='2.2';
 var HW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
 var HB=[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
 var BASEL={192:65,193:65,194:65,195:65,196:65,197:65,199:67,200:69,201:69,202:69,203:69,204:73,205:73,206:73,207:73,209:78,210:79,211:79,212:79,213:79,214:79,217:85,218:85,219:85,220:85,221:89,224:97,225:97,226:97,227:97,228:97,229:97,231:99,232:101,233:101,234:101,235:101,236:105,237:105,238:105,239:105,241:110,242:111,243:111,244:111,245:111,246:111,249:117,250:117,251:117,252:117,253:121,255:121};
@@ -668,11 +672,33 @@ function nextCell(dv,a){
   if(a==='mtk'&&!dv.mtkPflicht)return '–';
   var c=chk(dv,a);return {t:fmt(dv[a+'Next']),bold:c.s==='ueber'&&dv.status==='aktiv',col:dv.status!=='aktiv'?null:(c.s==='ueber'?RED:(c.s==='bald'?AMB:null))};
 }
+var BEST_SORT=[['name','Gerätename'],['ort','Raum / Standort'],['hersteller','Hersteller'],['typ','Typ / Modell'],['seriennr','Seriennummer'],['inventarnr','Inventarnummer'],['status','Betriebsstatus'],['stkNext','Nächste STK'],['mtkNext','Nächste MTK'],['stkLast','Letzte STK'],['mtkLast','Letzte MTK'],['baujahr','Anschaffungsjahr']];
+var PROT_SORT=[['datum','Prüfdatum'],['name','Gerätename'],['ort','Raum / Standort'],['inventarnr','Inventarnummer'],['art','Art (STK/MTK)'],['ergebnis','Ergebnis'],['pruefer','Prüfer'],['protokollNr','Protokoll-/Plakettennr.'],['naechste','Nächste Prüfung']];
+function sortKeys(o,tab){
+  var ks=[];[[o.s1,o.d1],[o.s2,o.d2]].forEach(function(p){if(p[0]&&tab.some(function(t){return t[0]===p[0]}))ks.push({f:p[0],d:p[1]==='desc'?-1:1})});return ks;
+}
+function sortLabel(ks,tab){return ks.map(function(k){var t=tab.filter(function(x){return x[0]===k.f})[0];return t[1]+(k.d<0?' (absteigend)':'')}).join(', dann ')}
+function sortCmp(ks,get,tie){
+  return function(a,b){
+    for(var i=0;i<ks.length;i++){
+      var va=get(a,ks[i].f),vb=get(b,ks[i].f),ea=va==null||va==='',eb=vb==null||vb==='';
+      if(ea&&eb)continue;if(ea)return 1;if(eb)return -1;
+      var c=String(va).localeCompare(String(vb),'de',{numeric:true,sensitivity:'base'});if(c)return ks[i].d*c;
+    }
+    return tie(a,b);
+  };
+}
+function sortFormHtml(tab,f1,d1){
+  function sel(name,def,none){return '<select name="'+name+'">'+(none?'<option value="">– keine –</option>':'')+tab.map(function(t){return '<option value="'+t[0]+'"'+(t[0]===def?' selected':'')+'>'+esc(t[1])+'</option>'}).join('')+'</select>'}
+  function dir(name,def){return '<select name="'+name+'"><option value="asc"'+(def==='asc'?' selected':'')+'>aufsteigend (A–Z, alt–neu)</option><option value="desc"'+(def==='desc'?' selected':'')+'>absteigend (Z–A, neu–alt)</option></select>'}
+  return '<label>Sortieren nach</label><div class="g2"><div>'+sel('s1',f1)+'</div><div>'+dir('d1',d1)+'</div></div><label>Dann nach (optional)</label><div class="g2"><div>'+sel('s2','',true)+'</div><div>'+dir('d2','asc')+'</div></div>';
+}
 function buildBest(o){
-  var list=S.devices.filter(function(d){return o.aus||d.status!=='ausgesondert'}).sort(byName);
+  var ks=sortKeys(o,BEST_SORT);
+  var list=S.devices.filter(function(d){return o.aus||d.status!=='ausgesondert'}).sort(sortCmp(ks,function(d,f){return f==='status'?statusName(d.status):d[f]},byName));
   var doc=new PdfDoc({landscape:true,title:'Bestandsverzeichnis Medizinprodukte'});
   var c={ueber:0,bald:0,offen:0};list.forEach(function(d){var s=devStatus(d);if(c[s]!=null)c[s]++});
-  doc.para(list.length+' Gerät'+(list.length===1?'':'e')+' · '+c.ueber+' überfällig · '+c.bald+' bald fällig (innerhalb von '+S.settings.warnDays+' Tagen) · '+c.offen+' ohne erfassten Stand',{size:9.5,gap:6});
+  doc.para(list.length+' Gerät'+(list.length===1?'':'e')+' · '+c.ueber+' überfällig · '+c.bald+' bald fällig (innerhalb von '+S.settings.warnDays+' Tagen) · '+c.offen+' ohne erfassten Stand'+(ks.length?' · sortiert nach '+sortLabel(ks,BEST_SORT):''),{size:9.5,gap:6});
   doc.table([165,95,105,85,56,56,56,56,95],['Gerät / Typ','Hersteller','Seriennr. / Inv.-Nr.','Standort','STK zuletzt','STK fällig','MTK zuletzt','MTK fällig','Status'],
     list.map(function(d){return [[{t:d.name,bold:true},d.typ||''],d.hersteller||'',[d.seriennr?'SN '+d.seriennr:'',d.inventarnr?'Inv. '+d.inventarnr:''],d.ort||'',lastCell(d,'stk'),nextCell(d,'stk'),lastCell(d,'mtk'),nextCell(d,'mtk'),pdfDevStatus(d)]}));
   if(!list.length)doc.para('Keine Geräte erfasst.',{size:10});
@@ -697,9 +723,10 @@ async function pdfInsp(doc,i,o){
 }
 function sortInsp(a,b){return String(b.datum).localeCompare(String(a.datum))||(b.createdAt||0)-(a.createdAt||0)}
 async function buildProt(o){
-  var list=S.inspections.filter(function(i){return (!o.von||i.datum>=o.von)&&(!o.bis||i.datum<=o.bis)&&(!o.deviceId||i.deviceId===o.deviceId)}).sort(sortInsp);
+  var pks=sortKeys(o,PROT_SORT);
+  var list=S.inspections.filter(function(i){return (!o.von||i.datum>=o.von)&&(!o.bis||i.datum<=o.bis)&&(!o.deviceId||i.deviceId===o.deviceId)}).sort(sortCmp(pks,function(i,f){if(f==='name')return i.deviceName;if(f==='ort'){var dd=getDev(i.deviceId);return dd&&dd.ort}return i[f]},sortInsp));
   var doc=new PdfDoc({title:'Prüfprotokoll Medizinprodukte'}),dev=o.deviceId&&getDev(o.deviceId);
-  doc.para('Zeitraum: '+(o.von?fmt(o.von):'Beginn')+' bis '+(o.bis?fmt(o.bis):'heute')+(dev?' · Gerät: '+dev.name:'')+' · '+list.length+' Prüfung'+(list.length===1?'':'en'),{size:9.5,gap:8});
+  doc.para('Zeitraum: '+(o.von?fmt(o.von):'Beginn')+' bis '+(o.bis?fmt(o.bis):'heute')+(dev?' · Gerät: '+dev.name:'')+' · '+list.length+' Prüfung'+(list.length===1?'':'en')+(pks.length?' · sortiert nach '+sortLabel(pks,PROT_SORT):''),{size:9.5,gap:8});
   if(!list.length)doc.para('Keine Prüfungen im gewählten Zeitraum.',{size:10});
   for(var k=0;k<list.length;k++)await pdfInsp(doc,list[k],{withDev:!dev,fotos:o.fotos});
   return doc.build();
@@ -725,8 +752,8 @@ async function runExport(form){
   S.modal={type:'work',text:'PDF wird erstellt …'};renderModal();
   try{
     var bytes,name;
-    if(kind==='best'){bytes=buildBest({aus:f.get('aus')==='on'});name='Bestandsverzeichnis_'+todayStr()+'.pdf'}
-    else{var von=g('von'),bis=g('bis');bytes=await buildProt({von:parseD(von)?von:'',bis:parseD(bis)?bis:'',deviceId:g('dev'),fotos:f.get('fotos')==='on'});name='Pruefprotokoll_'+todayStr()+'.pdf'}
+    if(kind==='best'){bytes=buildBest({aus:f.get('aus')==='on',s1:g('s1'),d1:g('d1'),s2:g('s2'),d2:g('d2')});name='Bestandsverzeichnis_'+todayStr()+'.pdf'}
+    else{var von=g('von'),bis=g('bis');bytes=await buildProt({von:parseD(von)?von:'',bis:parseD(bis)?bis:'',deviceId:g('dev'),fotos:f.get('fotos')==='on',s1:g('s1'),d1:g('d1'),s2:g('s2'),d2:g('d2')});name='Pruefprotokoll_'+todayStr()+'.pdf'}
     offerFile(name,new Blob([bytes],{type:'application/pdf'}),'application/pdf','pdf');
   }catch(e){S.modal=null;renderModal();toast('PDF konnte nicht erstellt werden')}
 }
@@ -738,9 +765,9 @@ async function runDossier(id){
 }
 function exportForm(m){
   var btn='<div class="row" style="margin-top:16px"><button class="pri" type="submit">PDF erstellen</button><button type="button" data-act="close">Abbrechen</button></div></form>';
-  if(m.kind==='best')return '<h2>Bestandsverzeichnis (PDF)</h2><div class="mut small">Alle Geräte mit Fristen und Status, quer im A4-Format.</div><form id="expform" data-kind="best"><label class="chk"><input type="checkbox" name="aus"> Ausgesonderte Geräte einschließen</label>'+btn;
+  if(m.kind==='best')return '<h2>Bestandsverzeichnis (PDF)</h2><div class="mut small">Alle Geräte mit Fristen und Status, quer im A4-Format.</div><form id="expform" data-kind="best"><label class="chk"><input type="checkbox" name="aus"> Ausgesonderte Geräte einschließen</label>'+sortFormHtml(BEST_SORT,'name','asc')+btn;
   var opts='<option value="">Alle Geräte</option>'+S.devices.slice().sort(byName).map(function(d){return '<option value="'+esc(d.id)+'">'+esc(d.name)+(d.inventarnr?' ('+esc(d.inventarnr)+')':'')+'</option>'}).join('');
-  return '<h2>Prüfprotokolle (PDF)</h2><div class="mut small">Alle dokumentierten Prüfungen, neueste zuerst.</div><form id="expform" data-kind="prot"><div class="g2"><div><label>Von (optional)</label><input type="date" name="von"></div><div><label>Bis (optional)</label><input type="date" name="bis"></div></div><label>Gerät</label><select name="dev">'+opts+'</select><label class="chk"><input type="checkbox" name="fotos" checked> Fotos in den Bericht einbetten</label><div class="small mut">Jedes Foto vergrößert die Datei um etwa 0,3 MB.</div>'+btn;
+  return '<h2>Prüfprotokolle (PDF)</h2><div class="mut small">Alle dokumentierten Prüfungen, neueste zuerst.</div><form id="expform" data-kind="prot"><div class="g2"><div><label>Von (optional)</label><input type="date" name="von"></div><div><label>Bis (optional)</label><input type="date" name="bis"></div></div><label>Gerät</label><select name="dev">'+opts+'</select><label class="chk"><input type="checkbox" name="fotos" checked> Fotos in den Bericht einbetten</label><div class="small mut">Jedes Foto vergrößert die Datei um etwa 0,3 MB.</div>'+sortFormHtml(PROT_SORT,'datum','desc')+btn;
 }
 
 /* ---------- Datei bereitstellen (Teilen-Dialog) ---------- */
