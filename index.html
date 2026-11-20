@@ -111,6 +111,7 @@ nav button{min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;whi
 <div id="modal"></div>
 <div id="toast" role="status"></div>
 <input type="file" id="photoadd" class="vh" accept="image/*" multiple>
+<input type="file" id="docadd" class="vh" accept="application/pdf,.pdf" multiple>
 <script>
 (function(){
 'use strict';
@@ -140,13 +141,13 @@ function parseDateAny(s){
 }
 
 /* ---------- Zustand ---------- */
-var S={devices:[],inspections:[],photos:[],pending:[],busy:0,file:null,addTo:'',settings:{warnDays:60},tab:'faellig',filter:'alle',q:'',ort:'',loaded:{d:false,i:false},slow:false,store:'none',modal:null,importText:'',importPrev:null,lastPruefer:''};
-var IDBH=null,DL=true,mem={devices:Object.create(null),inspections:Object.create(null),settings:Object.create(null),photos:Object.create(null)};
+var S={devices:[],inspections:[],photos:[],docs:[],addDocTo:'',docBack:null,pending:[],busy:0,file:null,addTo:'',settings:{warnDays:60},tab:'faellig',filter:'alle',q:'',ort:'',loaded:{d:false,i:false},slow:false,store:'none',modal:null,importText:'',importPrev:null,lastPruefer:''};
+var IDBH=null,DL=true,mem={devices:Object.create(null),inspections:Object.create(null),settings:Object.create(null),photos:Object.create(null),docs:Object.create(null)};
 try{S.lastPruefer=localStorage.getItem('gv_pruefer')||''}catch(e){}
 var ready=function(){return S.loaded.d&&S.loaded.i};
 
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
-function syncMem(){S.devices=Object.keys(mem.devices).map(function(k){return Object.assign({id:k},mem.devices[k])});S.inspections=Object.keys(mem.inspections).map(function(k){return Object.assign({id:k},mem.inspections[k])});S.photos=Object.keys(mem.photos).map(function(k){return Object.assign({id:k},mem.photos[k])});if(mem.settings.main)S.settings=Object.assign({warnDays:60},mem.settings.main)}
+function syncMem(){S.devices=Object.keys(mem.devices).map(function(k){return Object.assign({id:k},mem.devices[k])});S.inspections=Object.keys(mem.inspections).map(function(k){return Object.assign({id:k},mem.inspections[k])});S.photos=Object.keys(mem.photos).map(function(k){return Object.assign({id:k},mem.photos[k])});S.docs=Object.keys(mem.docs).map(function(k){return Object.assign({id:k},mem.docs[k])});if(mem.settings.main)S.settings=Object.assign({warnDays:60},mem.settings.main)}
 async function saveDoc(col,id,data,quiet){
   data=clean(data);
   if(IDBH)await idbReq(col,'readwrite',function(s){return s.put(Object.assign({},data,{id:id}))});
@@ -342,6 +343,7 @@ function detailHtml(dv){
   else h+='<button class="sm" data-act="setst" data-st="aktiv" data-id="'+esc(dv.id)+'">Wieder in Betrieb</button>';
   h+='<button class="sm dng" data-act="del" data-id="'+esc(dv.id)+'">Löschen</button></div>';
   var hist=S.inspections.filter(function(i){return i.deviceId===dv.id}).sort(function(a,b){return String(b.datum).localeCompare(String(a.datum))||(b.createdAt||0)-(a.createdAt||0)});
+  h+=docSection(dv);
   h+='<h3>Prüfhistorie</h3>'+(hist.length?hist.map(function(i){return '<div class="hist">'+inspRow(i,false)+'</div>'}).join(''):'<div class="mut small">Noch keine Prüfung dokumentiert.</div>');
   return h;
 }
@@ -357,10 +359,10 @@ function devForm(dv,isNew){
   +'<div class="g2"><div><label>Seriennummer / Loscode</label><input name="seriennr" value="'+v('seriennr')+'"></div><div><label>Inventarnummer</label><input name="inventarnr" value="'+v('inventarnr')+'"></div></div>'
   +'<div class="g2"><div><label>Standort / Raum</label><input name="ort" value="'+v('ort')+'"></div><div><label>Anschaffungsjahr</label><input name="baujahr" inputmode="numeric" maxlength="4" value="'+v('baujahr')+'"></div></div>'
   +'<label>Betriebsstatus</label><select name="status">'+['aktiv','gesperrt','ausgesondert'].map(function(s){return '<option value="'+s+'"'+((dv.status||'aktiv')===s?' selected':'')+'>'+statusName(s)+'</option>'}).join('')+'</select>'
-  +'<h3>STK – Sicherheitstechnische Kontrolle</h3><div class="g2"><div><label>Letzte STK</label><input type="date" name="stkLast" value="'+v('stkLast')+'"></div><div><label>Intervall (Monate)</label><input type="number" name="stkInt" min="1" max="120" value="'+stkInt+'"></div></div>'
+  +'<h3>STK – Sicherheitstechnische Kontrolle</h3><div class="g2"><div><label>Letzte STK</label><input type="date" name="stkLast" value="'+v('stkLast')+'"></div><div><label>Intervall (Monate)</label>'+intSel('stkInt',stkInt)+'</div></div>'
   +'<label>Nächste STK fällig <span class="mut">(steht oft auf der Plakette)</span></label><input type="date" name="stkNext" value="'+v('stkNext')+'"'+stkMan+'>'
   +'<h3>MTK – Messtechnische Kontrolle</h3><label class="chk"><input type="checkbox" name="mtkPflicht"'+(dv.mtkPflicht?' checked':'')+'> MTK vorgeschrieben</label>'
-  +'<div id="mtkbox"'+(dv.mtkPflicht?'':' hidden')+'><div class="g2"><div><label>Letzte MTK</label><input type="date" name="mtkLast" value="'+v('mtkLast')+'"></div><div><label>Intervall (Monate)</label><input type="number" name="mtkInt" min="1" max="120" value="'+mtkInt+'"></div></div>'
+  +'<div id="mtkbox"'+(dv.mtkPflicht?'':' hidden')+'><div class="g2"><div><label>Letzte MTK</label><input type="date" name="mtkLast" value="'+v('mtkLast')+'"></div><div><label>Intervall (Monate)</label>'+intSel('mtkInt',mtkInt)+'</div></div>'
   +'<label>Nächste MTK fällig</label><input type="date" name="mtkNext" value="'+v('mtkNext')+'"'+mtkMan+'></div>'
   +'<label>Bemerkung</label><textarea name="bemerkung">'+v('bemerkung')+'</textarea><div id="ferr" class="err" hidden></div>'
   +'<div class="row" style="margin-top:16px"><button class="pri" type="submit">Speichern</button><button type="button" data-act="close">Abbrechen</button></div></form>';
@@ -504,8 +506,8 @@ document.addEventListener('click',async function(e){
   else if(a==='dup'){var d=Object.assign({},getDev(id));['id','seriennr','inventarnr','stkLast','stkNext','mtkLast','mtkNext'].forEach(function(k){delete d[k]});d.status='aktiv';delete d.demo;S.modal={type:'dev',dv:d,isNew:true};renderModal()}
   else if(a==='insp'){S.pending=[];S.modal={type:'insp',id:id,art:el.dataset.art};renderModal()}
   else if(a==='setst')await setStatus(id,el.dataset.st);
-  else if(a==='del'){S.modal={type:'confirm',title:'Gerät löschen?',text:'Das Gerät wird aus dem Bestand entfernt. Bereits dokumentierte Prüfungen bleiben im Protokoll erhalten. Für ausgemusterte Geräte ist „Aussondern“ meist besser.',ok:'Endgültig löschen',act:'delok',id:id};renderModal()}
-  else if(a==='delok'){try{await delDoc('devices',id);S.modal=null;renderModal();toast('Gerät gelöscht')}catch(x){toast('Löschen fehlgeschlagen')}}
+  else if(a==='del'){S.modal={type:'confirm',title:'Gerät löschen?',text:'Das Gerät wird aus dem Bestand entfernt. Bereits dokumentierte Prüfungen bleiben im Protokoll erhalten. Angehängte Dokumente werden mit gelöscht. Für ausgemusterte Geräte ist „Aussondern“ meist besser.',ok:'Endgültig löschen',act:'delok',id:id};renderModal()}
+  else if(a==='delok'){try{for(var dd of S.docs.filter(function(x){return x.deviceId===id}))await delDocFile(dd.id);await delDoc('devices',id);S.modal=null;renderModal();toast('Gerät gelöscht')}catch(x){toast('Löschen fehlgeschlagen')}}
   else if(a==='demo'){try{for(var d2 of demoData())await saveDoc('devices',uid(),d2);toast('Beispieldaten geladen')}catch(x){toast('Fehlgeschlagen')}}
   else if(a==='demo-rm'){try{for(var dv of S.devices.filter(function(x){return x.demo}))await delDoc('devices',dv.id);for(var i of S.inspections.filter(function(x){return x.demo}))await delDoc('inspections',i.id);toast('Beispieldaten entfernt')}catch(x){toast('Fehlgeschlagen')}}
   else if(a==='imp-prev'){S.importPrev=mapRows(parseCSV(S.importText));render()}
@@ -524,11 +526,16 @@ document.addEventListener('click',async function(e){
   else if(a==='insp-del'){var ii=S.inspections.find(function(x){return x.id===id});if(!ii)return;S.modal={type:'confirm',title:'Prüfeintrag löschen?',text:'Eintrag vom '+fmt(ii.datum)+' ('+String(ii.art||'').toUpperCase()+', '+ii.deviceName+') wird mit allen zugehörigen Fotos entfernt. Die Prüftermine des Geräts bleiben unverändert und müssen bei Bedarf im Gerät angepasst werden. Tipp: vorher eine Komplettsicherung erstellen.',ok:'Weiter',act:'insp-del2',id:id,back:S.modal};renderModal()}
   else if(a==='insp-del2'){S.modal={type:'confirm2',id:id,back:S.modal&&S.modal.back};renderModal()}
   else if(a==='insp-delok'){var w=String(($('#delword')||{}).value||'').trim().toUpperCase();if(w!=='LÖSCHEN'&&w!=='LOESCHEN'){toast('Bitte LÖSCHEN eintippen');return}var bk2=S.modal&&S.modal.back;try{var ps=S.photos.filter(function(p){return p.inspId===id});for(var pi of ps)await delPhoto(pi.id);await delDoc('inspections',id);S.modal=bk2||null;renderModal();render();toast('Eintrag gelöscht')}catch(x){toast('Löschen fehlgeschlagen')}}
+  else if(a==='docadd'){S.addDocTo=id;$('#docadd').click()}
+  else if(a==='doc-open')openDoc(id);
+  else if(a==='file-view')viewFile();
+  else if(a==='doc-del'){S.modal={type:'confirm',title:'Dokument löschen?',text:'Das angehängte Dokument wird von diesem Gerät entfernt. Das Original auf deinem Gerät oder in Dateien bleibt unberührt.',ok:'Dokument löschen',act:'doc-delok',id:id,back:S.modal};renderModal()}
+  else if(a==='doc-delok'){var bk3=S.modal&&S.modal.back;try{await delDocFile(id);S.modal=bk3||null;renderModal();toast('Dokument gelöscht')}catch(x){toast('Löschen fehlgeschlagen')}}
   else if(a==='addphoto'){S.addTo=id;$('#photoadd').click()}
   else if(a==='pp-del'){S.pending.splice(+el.dataset.i,1);renderPending()}
   else if(a==='file-share')shareFile();
   else if(a==='file-save')saveFileLocal();
-  else if(a==='file-close'){S.file=null;S.modal=null;renderModal()}
+  else if(a==='file-close'){S.file=null;S.modal=S.docBack||null;S.docBack=null;renderModal()}
   else if(a==='exp-json')expJson();
   else if(a==='exp-ics')expIcs();
 });
@@ -553,6 +560,7 @@ document.addEventListener('change',function(e){
   else if(t.id==='csvfile'&&t.files&&t.files[0]){var fr=new FileReader();fr.onload=function(){S.importText=String(fr.result||'');S.importPrev=mapRows(parseCSV(S.importText));render()};fr.readAsText(t.files[0])}
   else if(t.id==='photoform')addPending(t);
   else if(t.id==='photoadd')addToInsp(t);
+  else if(t.id==='docadd')addDocs(t);
   else if(t.id==='einr')saveSetting('einrichtung',t.value);
   else if(t.id==='brief')saveSetting('briefpapier',t.checked?'1':'0');
   else if(t.id==='rtop')saveSetting('rTop',t.value);
@@ -565,7 +573,7 @@ document.addEventListener('change',function(e){
 });
 
 /* ---------- PDF-Erzeugung (ohne Bibliothek) ---------- */
-var APP_VERSION='2.4';
+var APP_VERSION='2.6';
 var HW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
 var HB=[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584];
 var BASEL={192:65,193:65,194:65,195:65,196:65,197:65,199:67,200:69,201:69,202:69,203:69,204:73,205:73,206:73,207:73,209:78,210:79,211:79,212:79,213:79,214:79,217:85,218:85,219:85,220:85,221:89,224:97,225:97,226:97,227:97,228:97,229:97,231:99,232:101,233:101,234:101,235:101,236:105,237:105,238:105,239:105,241:110,242:111,243:111,244:111,245:111,246:111,249:117,250:117,251:117,252:117,253:121,255:121};
@@ -801,11 +809,11 @@ function exportForm(m){
 }
 
 /* ---------- Datei bereitstellen (Teilen-Dialog) ---------- */
-function offerFile(name,blob,type,kind){S.file={name:name,blob:blob,type:type,kind:kind};S.modal={type:'file'};renderModal()}
+function offerFile(name,blob,type,kind,note){S.file={name:name,blob:blob,type:type,kind:kind,note:note||''};S.modal={type:'file'};renderModal()}
 function fileHtml(){
   var f=S.file;if(!f)return '';
   var kb=Math.max(1,Math.round(f.blob.size/1024));
-  return '<h2>Datei ist fertig</h2><p><b>'+esc(f.name)+'</b><br><span class="mut small">'+(kb>1024?(kb/1024).toFixed(1)+' MB':kb+' KB')+'</span></p><p class="small mut">„Teilen / Senden“ öffnet das iPhone-Menü: dort Mail wählen oder „In Dateien sichern“.</p><div class="row"><button class="pri" data-act="file-share">Teilen / Senden</button><button data-act="file-save">Speichern</button><button data-act="file-close">Schließen</button></div>';
+  return '<h2>Datei ist fertig</h2><p><b>'+esc(f.name)+'</b><br><span class="mut small">'+(kb>1024?(kb/1024).toFixed(1)+' MB':kb+' KB')+'</span></p><p class="small mut">„Teilen / Senden“ öffnet das iPhone-Menü: dort Mail wählen oder „In Dateien sichern“.</p>'+(f.note?'<p class="small" style="color:var(--amb)">'+esc(f.note)+'</p>':'')+'<div class="row"><button class="pri" data-act="file-share">Teilen / Senden</button>'+(f.kind==='doc'?'<button data-act="file-view">Ansehen</button>':'')+'<button data-act="file-save">Speichern</button><button data-act="file-close">Schließen</button></div>';
 }
 async function fileDone(){var f=S.file;if(f&&f.kind==='backup'){try{await saveDoc('settings','main',Object.assign({},S.settings,{lastBackup:todayStr()}))}catch(e){}}}
 async function shareFile(){
@@ -884,16 +892,83 @@ function photoModalHtml(m){
 }
 function saveSetting(k,v){return saveDoc('settings','main',Object.assign({},S.settings,(function(o){o[k]=String(v).slice(0,120);return o})({}))).catch(function(){toast('Speichern fehlgeschlagen')})}
 
+/* ---------- Intervall-Auswahl ---------- */
+function intSel(name,val){
+  var opts=[12,24,36,48,60];val=parseInt(val,10)||24;if(opts.indexOf(val)<0){opts.push(val);opts.sort(function(a,b){return a-b})}
+  return '<select name="'+name+'">'+opts.map(function(m){return '<option value="'+m+'"'+(m===val?' selected':'')+'>'+m+' Monate</option>'}).join('')+'</select>';
+}
+
+/* ---------- Dokumente (PDF-Anhänge am Gerät) ---------- */
+var DOC_MAX=30*1048576,DOC_BACKUP_MAX=40*1048576,DOC_PER_DEV=25,volDoc={};
+function isPdf(buf){var u=new Uint8Array(buf,0,Math.min(1024,buf.byteLength)),i;for(i=0;i+4<u.length;i++){if(u[i]===0x25&&u[i+1]===0x50&&u[i+2]===0x44&&u[i+3]===0x46&&u[i+4]===0x2d)return true}return false}
+async function storeDocFile(id,buf,meta,quiet){
+  if(IDBH)await idbReq('docData','readwrite',function(s){return s.put({id:id,data:buf})});else volDoc[id]=buf;
+  await saveDoc('docs',id,meta,quiet);
+}
+function getDocData(id){
+  if(!IDBH)return Promise.resolve(volDoc[id]||null);
+  return idbReq('docData','readonly',function(s){return s.get(id)}).then(function(r){return r?r.data:null});
+}
+async function delDocFile(id){if(IDBH)await idbReq('docData','readwrite',function(s){return s.delete(id)});else delete volDoc[id];await delDoc('docs',id)}
+function fmtSize(n){return n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round(n/1024))+' KB'}
+function docSection(dv){
+  var list=S.docs.filter(function(d){return d.deviceId===dv.id}).sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0)});
+  var h='<h3>Dokumente (z. B. Handbuch)</h3>';
+  if(!list.length)h+='<div class="mut small">Noch kein Dokument angehängt.</div>';
+  list.forEach(function(d){
+    h+='<div class="card" style="margin-bottom:8px"><div><b>'+esc(d.name)+'</b></div><div class="mut small">'+esc(fmtSize(d.size||0))+' · hinzugefügt '+esc(fmt(new Date(d.createdAt||Date.now()).toISOString().slice(0,10)))+'</div><div class="row" style="margin-top:8px"><button class="sm pri" data-act="doc-open" data-id="'+esc(d.id)+'">Öffnen</button><button class="sm dng" data-act="doc-del" data-id="'+esc(d.id)+'">Löschen</button></div></div>';
+  });
+  h+='<div class="row" style="margin-top:6px"><button class="sm" data-act="docadd" data-id="'+esc(dv.id)+'">+ PDF anhängen</button></div><div class="mut small" style="margin-top:4px">Nur PDF, bis 30 MB je Datei. Die Dokumente bleiben auf diesem Gerät.</div>';
+  return h;
+}
+async function addDocs(input){
+  var files=Array.prototype.slice.call(input.files||[]),did=S.addDocTo;input.value='';
+  var dv=getDev(did);if(!dv||!files.length)return;
+  var n=0,msg='';
+  for(var k=0;k<files.length;k++){
+    var f=files[k];
+    if(S.docs.filter(function(d){return d.deviceId===did}).length>=DOC_PER_DEV){msg='Maximal '+DOC_PER_DEV+' Dokumente pro Gerät';break}
+    if(f.size>DOC_MAX){msg='„'+String(f.name).slice(0,40)+'“ ist größer als 30 MB';continue}
+    try{
+      var buf=await readBuf(f);
+      if(!isPdf(buf)){msg='„'+String(f.name).slice(0,40)+'“ ist keine PDF-Datei';continue}
+      await storeDocFile(uid(),buf,{deviceId:did,name:String(f.name||'Dokument.pdf').slice(0,120),size:buf.byteLength,createdAt:Date.now()},false);n++;
+    }catch(e){msg='Eine Datei konnte nicht gespeichert werden'}
+  }
+  toast(msg||(n+' Dokument'+(n===1?'':'e')+' angehängt'));
+  if(msg&&n)setTimeout(function(){toast(n+' Dokument'+(n===1?'':'e')+' angehängt, '+msg)},50);
+}
+async function openDoc(id){
+  var m=S.docs.find(function(d){return d.id===id});if(!m)return;
+  try{var d=await getDocData(id);if(!d){toast('Dokument nicht gefunden');return}
+    S.docBack=S.modal;offerFile(m.name,new Blob([d],{type:'application/pdf'}),'application/pdf','doc')}
+  catch(e){toast('Dokument konnte nicht geladen werden')}
+}
+function viewFile(){
+  var f=S.file;if(!f)return;
+  try{var u=URL.createObjectURL(f.blob),w=window.open(u,'_blank');setTimeout(function(){try{URL.revokeObjectURL(u)}catch(e){}},120000);if(!w)toast('Ansehen nicht möglich: bitte „Teilen / Senden“ nutzen')}
+  catch(e){toast('Ansehen nicht möglich: bitte „Teilen / Senden“ nutzen')}
+}
+
 /* ---------- Sicherung ---------- */
 function b64(buf){var u=new Uint8Array(buf),s='',CH=0x8000;for(var i=0;i<u.length;i+=CH)s+=String.fromCharCode.apply(null,u.subarray(i,i+CH));return btoa(s)}
 function unb64(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer}
 async function expJson(){
   S.modal={type:'work',text:'Sicherung wird erstellt …'};renderModal();
   try{
-    var parts=['{"exportiert":'+JSON.stringify(new Date().toISOString())+',"version":2,"einstellungen":'+JSON.stringify(S.settings)+',"geraete":'+JSON.stringify(S.devices)+',"pruefungen":'+JSON.stringify(S.inspections)+',"fotos":['],first=true;
-    for(var k=0;k<S.photos.length;k++){var p=S.photos[k],d=await getPhotoData(p.id);if(!d)continue;parts.push((first?'':',')+JSON.stringify(Object.assign({},p,{data:b64(d)})));first=false}
-    parts.push(']}');
-    offerFile('geraeteverwaltung_sicherung_'+todayStr()+'.json',new Blob(parts,{type:'application/json'}),'application/json','backup');
+    var k,parts=['{"exportiert":'+JSON.stringify(new Date().toISOString())+',"version":2,"einstellungen":'+JSON.stringify(S.settings)+',"geraete":'+JSON.stringify(S.devices)+',"pruefungen":'+JSON.stringify(S.inspections)+',"fotos":['],first=true;
+    for(k=0;k<S.photos.length;k++){var p=S.photos[k],d=await getPhotoData(p.id);if(!d)continue;parts.push((first?'':',')+JSON.stringify(Object.assign({},p,{data:b64(d)})));first=false}
+    parts.push(']');
+    var dsz=S.docs.reduce(function(a,m){return a+(m.size||0)},0),note='';
+    if(S.docs.length){
+      if(dsz<=DOC_BACKUP_MAX){
+        parts.push(',"dokumente":[');var f2=true;
+        for(k=0;k<S.docs.length;k++){var m2=S.docs[k],d2=await getDocData(m2.id);if(!d2)continue;parts.push((f2?'':',')+JSON.stringify(Object.assign({},m2,{data:b64(d2)})));f2=false}
+        parts.push(']');
+      }else note='Die angehängten Dokumente (PDF, zusammen '+(dsz/1048576).toFixed(0)+' MB) sind nicht in dieser Sicherung enthalten, weil sie zu groß sind. Bitte die Originale separat aufbewahren.';
+    }
+    parts.push('}');
+    offerFile('geraeteverwaltung_sicherung_'+todayStr()+'.json',new Blob(parts,{type:'application/json'}),'application/json','backup',note);
   }catch(e){S.modal=null;renderModal();toast('Sicherung fehlgeschlagen')}
 }
 async function restoreBackup(text){
@@ -911,14 +986,21 @@ async function restoreBackup(text){
       var buf=unb64(z.data);
       await storePhoto(z.id,buf,{inspId:z.inspId,deviceId:String(z.deviceId||''),name:String(z.name||'Foto').slice(0,80),w:Math.round(z.w),h:Math.round(z.h),size:buf.byteLength,thumb:z.thumb,createdAt:+z.createdAt||Date.now()},true);nf++;
     }
+    var dk=Array.isArray(j.dokumente)?j.dokumente:[],ndoc=0;
+    for(k=0;k<dk.length;k++){
+      var w=dk[k];
+      if(!w||typeof w!=='object'||!okid.test(String(w.id||''))||!okid.test(String(w.deviceId||''))||typeof w.data!=='string')continue;
+      var wb=unb64(w.data);if(!isPdf(wb))continue;
+      await storeDocFile(w.id,wb,{deviceId:w.deviceId,name:String(w.name||'Dokument.pdf').slice(0,120),size:wb.byteLength,createdAt:+w.createdAt||Date.now()},true);ndoc++;
+    }
     var es=j.einstellungen;
     if(es&&typeof es==='object'){var st=Object.assign({},S.settings);if(+es.warnDays>0)st.warnDays=Math.min(365,Math.round(+es.warnDays));['einrichtung','ersteller','briefpapier','rTop','rBot','rSide'].forEach(function(key){if(typeof es[key]==='string')st[key]=es[key].slice(0,120)});await saveDoc('settings','main',st,true)}
-    render();toast(nd+' Geräte, '+ni+' Prüfungen, '+nf+' Fotos wiederhergestellt');
+    render();toast(nd+' Geräte, '+ni+' Prüfungen, '+nf+' Fotos'+(ndoc?', '+ndoc+' Dokumente':'')+' wiederhergestellt');
   }catch(e){render();toast('Wiederherstellung nach '+nd+' Geräten abgebrochen')}
 }
 
 /* ---------- Lokale Datenbank (IndexedDB) ---------- */
-function idbOpen(){return new Promise(function(res,rej){var r=indexedDB.open('geraeteverwaltung',2);r.onupgradeneeded=function(){var d=r.result;['devices','inspections','settings','photos','photoData'].forEach(function(n){if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};r.onsuccess=function(){var d=r.result;d.onversionchange=function(){d.close()};res(d)};r.onerror=function(){rej(r.error)};r.onblocked=function(){toast('Bitte die App in anderen Fenstern oder Tabs schließen.')}})}
+function idbOpen(){return new Promise(function(res,rej){var r=indexedDB.open('geraeteverwaltung',3);r.onupgradeneeded=function(){var d=r.result;['devices','inspections','settings','photos','photoData','docs','docData'].forEach(function(n){if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};r.onsuccess=function(){var d=r.result;d.onversionchange=function(){d.close()};res(d)};r.onerror=function(){rej(r.error)};r.onblocked=function(){toast('Bitte die App in anderen Fenstern oder Tabs schließen.')}})}
 function idbReq(store,mode,fn){return new Promise(function(res,rej){var tx=IDBH.transaction(store,mode),rq=fn(tx.objectStore(store));tx.oncomplete=function(){res(rq&&rq.result)};tx.onerror=tx.onabort=function(){rej(tx.error)}})}
 
 /* ---------- Sicherung, Wiederherstellung, Kalender ---------- */
@@ -948,7 +1030,7 @@ function expIcs(){var s=buildIcs();if(!s){toast('Keine anstehenden Fristen mit D
 /* ---------- Start ---------- */
 async function init(){
   render();
-  var STORES=['devices','inspections','settings','photos'];
+  var STORES=['devices','inspections','settings','photos','docs'];
   try{
     IDBH=await idbOpen();
     var all=await Promise.all(STORES.map(function(c){return idbReq(c,'readonly',function(s){return s.getAll()})}));
